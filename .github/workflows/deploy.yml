@@ -66,6 +66,8 @@ jobs:
             echo "PUBLIC_APP_URL=https://pulse.emmabyte.io"
             printf 'MAILERSEND_WEBHOOK_SECRET=%s\n' "$MAILERSEND_WEBHOOK_SECRET"
             printf 'VERCEL_WEBHOOK_SECRET=%s\n' "$VERCEL_WEBHOOK_SECRET"
+            printf 'GOOGLE_CLIENT_ID=%s\n' "$GOOGLE_CLIENT_ID"
+            printf 'GOOGLE_CLIENT_SECRET=%s\n' "$GOOGLE_CLIENT_SECRET"
             printf 'CLOUDFLARE_TUNNEL_TOKEN=%s\n' "$CLOUDFLARE_TUNNEL_TOKEN"
           } > /tmp/deploy.env
         env:
@@ -73,6 +75,8 @@ jobs:
           BETTER_AUTH_SECRET: ${{ secrets.ENCRYPTION_KEY }}
           MAILERSEND_WEBHOOK_SECRET: ${{ secrets.MAILERSEND_WEBHOOK_SECRET }}
           VERCEL_WEBHOOK_SECRET: ${{ secrets.VERCEL_WEBHOOK_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
 
       - name: Sync project files to VM
