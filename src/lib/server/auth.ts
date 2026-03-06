@@ -30,13 +30,16 @@ export const auth = betterAuth({
 			enabled: true
 		}
 	},
-	user: {
-		async beforeCreate(user) {
-			const email = user.email;
-			if (!email?.endsWith(`@${ALLOWED_DOMAIN}`)) {
-				throw new Error(`Only @${ALLOWED_DOMAIN} accounts are allowed`);
+	databaseHooks: {
+		user: {
+			create: {
+				async before(user) {
+					const email = (user as { email?: string }).email;
+					if (!email?.endsWith(`@${ALLOWED_DOMAIN}`)) {
+						return false;
+					}
+				}
 			}
-			return user;
 		}
 	}
 });
