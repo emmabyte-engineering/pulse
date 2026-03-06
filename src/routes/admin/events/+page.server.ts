@@ -7,7 +7,10 @@ export const load: PageServerLoad = async ({ url }) => {
 	const perPage = 50;
 	const source = url.searchParams.get('source');
 	const severity = url.searchParams.get('severity');
+	const eventType = url.searchParams.get('eventType');
 	const search = url.searchParams.get('q');
+	const dateFrom = url.searchParams.get('from');
+	const dateTo = url.searchParams.get('to');
 
 	const where: Prisma.EventWhereInput = {};
 
@@ -16,6 +19,14 @@ export const load: PageServerLoad = async ({ url }) => {
 	}
 	if (severity) {
 		where.severity = severity as Prisma.EnumSeverityFilter;
+	}
+	if (eventType) {
+		where.eventType = { contains: eventType, mode: 'insensitive' };
+	}
+	if (dateFrom || dateTo) {
+		where.timestamp = {};
+		if (dateFrom) (where.timestamp as Record<string, Date>).gte = new Date(dateFrom);
+		if (dateTo) (where.timestamp as Record<string, Date>).lte = new Date(dateTo);
 	}
 	if (search) {
 		where.OR = [
@@ -43,6 +54,6 @@ export const load: PageServerLoad = async ({ url }) => {
 			total,
 			totalPages: Math.ceil(total / perPage)
 		},
-		filters: { source, severity, search }
+		filters: { source, severity, eventType, search, dateFrom, dateTo }
 	};
 };
