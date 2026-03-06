@@ -123,6 +123,13 @@ jobs:
 
       - name: Verify public endpoint
         run: |
-          sleep 5
-          curl -sf https://pulse.emmabyte.io/api/health
-          echo "Public endpoint verified!"
+          for i in 1 2 3 4 5; do
+            if curl -sf https://pulse.emmabyte.io/api/health; then
+              echo "Public endpoint verified!"
+              exit 0
+            fi
+            echo "Attempt $i failed, waiting 10s..."
+            sleep 10
+          done
+          echo "Public endpoint not reachable after 5 attempts"
+          exit 1
