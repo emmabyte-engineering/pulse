@@ -21,6 +21,7 @@ model User {
 
   sessions Session[]
   accounts Account[]
+  apiKeys  ApiKey[]
 
   @@map("user")
 }
@@ -133,6 +134,20 @@ model Metric {
   @@index([metricName, periodStart])
   @@index([source, periodStart])
   @@map("metric")
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  keyHash     String    @unique
+  prefix      String    // First 8 chars for display (e.g., "pk_a1b2...")
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@map("api_key")
 }
 
 model AlertRule {

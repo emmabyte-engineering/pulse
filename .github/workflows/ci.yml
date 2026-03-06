@@ -48,7 +48,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate
-      - run: pnpm db:push
+      - run: pnpm db:migrate:deploy
       - run: pnpm test:unit
 
   e2e:
@@ -79,7 +79,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate
-      - run: pnpm db:push
+      - run: pnpm db:migrate:deploy
       - run: pnpm build
       - run: npx playwright install --with-deps chromium
       - run: pnpm test:e2e

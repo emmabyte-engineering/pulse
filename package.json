@@ -16,6 +16,8 @@
     "test:watch": "vitest",
     "lint": "prettier --check . && eslint .",
     "format": "prettier --write .",
+    "dev:db": "docker compose -f docker-compose.dev.yml up -d",
+    "dev:db:stop": "docker compose -f docker-compose.dev.yml down",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
