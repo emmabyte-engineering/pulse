@@ -1,48 +1,61 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - '127.0.0.1:3000:3000'
+    env_file: .env
     environment:
-      - DATABASE_URL=postgresql://pulse:pulse@db:5432/pulse?schema=public
-      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-pulse}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-pulse}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-https://pulse.emmabyte.io}
       - MAILERSEND_WEBHOOK_SECRET=${MAILERSEND_WEBHOOK_SECRET:-}
       - VERCEL_WEBHOOK_SECRET=${VERCEL_WEBHOOK_SECRET:-}
       - PUBLIC_APP_NAME=Pulse
-      - PUBLIC_APP_URL=${PUBLIC_APP_URL:-http://localhost:3000}
-      - NODE_ENV=production
+      - PUBLIC_APP_URL=${PUBLIC_APP_URL:-https://pulse.emmabyte.io}
+      - SEED_DB=${SEED_DB:-false}
+      - DB_HOST=db
+      - DB_PORT=5432
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test:
+        ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   db:
     image: postgres:17-alpine
-    environment:
-      POSTGRES_USER: pulse
-      POSTGRES_PASSWORD: pulse
-      POSTGRES_DB: pulse
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-pulse}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      - POSTGRES_DB=${POSTGRES_DB:-pulse}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pulse"]
-      interval: 5s
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-pulse} -d ${POSTGRES_DB:-pulse}']
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN:?Set CLOUDFLARE_TUNNEL_TOKEN in .env}
+    depends_on:
+      app:
+        condition: service_healthy
     restart: unless-stopped
 
-  # Uncomment to add Cloudflare Tunnel
-  # tunnel:
-  #   image: cloudflare/cloudflared:latest
-  #   command: tunnel run
-  #   environment:
-  #     - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
-  #   depends_on:
-  #     - app
-  #   restart: unless-stopped
-
 volumes:
-  pgdata:
+  postgres-data:
+    driver: local
