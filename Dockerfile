@@ -13,14 +13,15 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN pnpm db:generate
-
-# better-auth validates BETTER_AUTH_SECRET at build time (SSR render)
+# Prisma 7 config requires DATABASE_URL; better-auth requires its secret at build time
+ARG DATABASE_URL=postgresql://build:build@localhost:5432/build
 ARG BETTER_AUTH_SECRET=build-time-placeholder
 ARG BETTER_AUTH_URL=http://localhost:3000
+ENV DATABASE_URL=$DATABASE_URL
 ENV BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
 ENV BETTER_AUTH_URL=$BETTER_AUTH_URL
 
+RUN pnpm db:generate
 RUN pnpm build
 
 # Production stage
