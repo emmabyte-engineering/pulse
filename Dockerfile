@@ -14,6 +14,13 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 RUN pnpm db:generate
+
+# better-auth validates BETTER_AUTH_SECRET at build time (SSR render)
+ARG BETTER_AUTH_SECRET=build-time-placeholder
+ARG BETTER_AUTH_URL=http://localhost:3000
+ENV BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
+ENV BETTER_AUTH_URL=$BETTER_AUTH_URL
+
 RUN pnpm build
 
 # Production stage
