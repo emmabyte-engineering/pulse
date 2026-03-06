@@ -6,4 +6,5 @@ build
 *.log
 playwright-report
 test-results
+src/lib/generated
 .DS_Store

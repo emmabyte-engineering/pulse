@@ -1,5 +1,5 @@
 import { db } from '$server/db';
-import type { EventSource, Severity } from '@prisma/client';
+import type { EventSource, Severity } from '../../generated/prisma/client';
 import crypto from 'node:crypto';
 
 const EVENT_TYPE_MAP: Record<string, { eventType: string; severity: Severity }> = {

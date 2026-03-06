@@ -1,33 +1,20 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { ingestEvent, ingestBatch } from '$server/events';
+import { validateApiKey } from '$server/api-keys';
 
-/**
- * Public event ingestion API.
- * Used by external services (e.g., emmabyte.io) to push events into Pulse.
- *
- * POST /api/ingest
- *
- * Body (single event):
- * {
- *   "source": "APP",
- *   "eventType": "email.sent",
- *   "severity": "INFO",
- *   "summary": "Email sent to user@example.com",
- *   "metadata": { ... }
- * }
- *
- * Body (batch):
- * {
- *   "events": [{ ... }, { ... }]
- * }
- *
- * Headers:
- *   Authorization: Bearer <API_KEY> (TODO: implement API key auth)
- */
 export const POST: RequestHandler = async ({ request }) => {
-	// TODO: API key authentication for external services
-	// const apiKey = request.headers.get('authorization')?.replace('Bearer ', '');
+	const authHeader = request.headers.get('authorization');
+	const apiKey = authHeader?.replace('Bearer ', '');
+
+	if (!apiKey) {
+		error(401, 'Missing API key. Use Authorization: Bearer <key>');
+	}
+
+	const valid = await validateApiKey(apiKey);
+	if (!valid) {
+		error(403, 'Invalid or expired API key');
+	}
 
 	try {
 		const body = await request.json();

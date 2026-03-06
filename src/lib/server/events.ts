@@ -1,5 +1,5 @@
 import { db } from './db';
-import type { EventSource, Severity, Prisma } from '@prisma/client';
+import type { EventSource, Severity, Prisma } from '../generated/prisma/client';
 
 interface IngestEventParams {
 	source: EventSource;

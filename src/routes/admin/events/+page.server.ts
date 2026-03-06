@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { db } from '$server/db';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '$lib/generated/prisma/client';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
