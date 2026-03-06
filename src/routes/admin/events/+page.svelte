@@ -6,10 +6,16 @@
 
 	let { data } = $props();
 
-	let searchInput = $state(data.filters.search ?? '');
-	let selectedSource = $state(data.filters.source ?? '');
-	let selectedSeverity = $state(data.filters.severity ?? '');
+	let searchInput = $state('');
+	let selectedSource = $state('');
+	let selectedSeverity = $state('');
 	let expandedEvent = $state<string | null>(null);
+
+	$effect(() => {
+		searchInput = data.filters.search ?? '';
+		selectedSource = data.filters.source ?? '';
+		selectedSeverity = data.filters.severity ?? '';
+	});
 
 	function applyFilters() {
 		const params = new URLSearchParams();

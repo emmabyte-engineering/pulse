@@ -1,5 +1,5 @@
 import { db } from './db';
-import type { EventSource, Severity } from '@prisma/client';
+import type { EventSource, Severity, Prisma } from '@prisma/client';
 
 interface IngestEventParams {
 	source: EventSource;
@@ -9,7 +9,7 @@ interface IngestEventParams {
 	organizationId?: string;
 	emailAddress?: string;
 	summary?: string;
-	metadata?: Record<string, unknown>;
+	metadata?: Prisma.InputJsonValue;
 	externalId?: string;
 	retainUntil?: Date;
 }
