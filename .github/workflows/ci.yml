@@ -92,6 +92,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: [check, test]
+    env:
+      BETTER_AUTH_SECRET: ci-build-secret-not-real
+      BETTER_AUTH_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
