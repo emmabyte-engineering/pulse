@@ -6,35 +6,35 @@
 </script>
 
 <div class="space-y-8">
-	<h1 class="text-3xl font-bold tracking-tight">Dashboard</h1>
+	<h1 class="text-3xl font-semibold tracking-tight">Dashboard</h1>
 
 	<!-- Stats cards -->
-	<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-		<div class="rounded-lg border border-border bg-card p-6">
+	<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+		<div class="rounded-2xl border border-border bg-card p-6">
 			<p class="text-sm text-muted-foreground">Total Events</p>
-			<p class="mt-1 text-3xl font-bold">{data.stats.totalEvents.toLocaleString()}</p>
+			<p class="mt-1 text-3xl font-semibold">{data.stats.totalEvents.toLocaleString()}</p>
 		</div>
-		<div class="rounded-lg border border-border bg-card p-6">
+		<div class="rounded-2xl border border-border bg-card p-6">
 			<p class="text-sm text-muted-foreground">Last 24 Hours</p>
-			<p class="mt-1 text-3xl font-bold">{data.stats.recentEvents.toLocaleString()}</p>
+			<p class="mt-1 text-3xl font-semibold">{data.stats.recentEvents.toLocaleString()}</p>
 		</div>
-		<div class="rounded-lg border border-border bg-card p-6">
+		<div class="rounded-2xl border border-border bg-card p-6">
 			<p class="text-sm text-muted-foreground">Errors (7d)</p>
-			<p class="mt-1 text-3xl font-bold text-red-400">
+			<p class="mt-1 text-3xl font-semibold text-[#FA586D]">
 				{data.stats.criticalEvents.toLocaleString()}
 			</p>
 		</div>
-		<div class="rounded-lg border border-border bg-card p-6">
+		<div class="rounded-2xl border border-border bg-card p-6">
 			<p class="text-sm text-muted-foreground">Sources Active</p>
-			<p class="mt-1 text-3xl font-bold">{data.stats.sourceBreakdown.length}</p>
+			<p class="mt-1 text-3xl font-semibold">{data.stats.sourceBreakdown.length}</p>
 		</div>
 	</div>
 
 	<!-- Source breakdown -->
 	{#if data.stats.sourceBreakdown.length > 0}
-		<div class="rounded-lg border border-border bg-card p-6">
+		<div class="rounded-2xl border border-border bg-card p-6">
 			<h2 class="text-lg font-semibold">Events by Source (7d)</h2>
-			<div class="mt-4 space-y-2">
+			<div class="mt-4 space-y-3">
 				{#each data.stats.sourceBreakdown as source}
 					<div class="flex items-center justify-between">
 						<span class="text-sm font-medium">{source.source}</span>
@@ -46,10 +46,13 @@
 	{/if}
 
 	<!-- Latest events -->
-	<div class="rounded-lg border border-border bg-card">
+	<div class="rounded-2xl border border-border bg-card">
 		<div class="flex items-center justify-between border-b border-border p-6">
 			<h2 class="text-lg font-semibold">Latest Events</h2>
-			<a href="/admin/events" class="text-sm text-muted-foreground hover:text-foreground">
+			<a
+				href="/admin/events"
+				class="text-sm text-muted-foreground transition-colors hover:text-[#FA586D]"
+			>
 				View all
 			</a>
 		</div>
@@ -57,7 +60,7 @@
 			{#each data.latestEvents as event}
 				<div class="flex items-center gap-4 px-6 py-3">
 					<span
-						class="inline-flex rounded-md px-2 py-0.5 text-xs font-medium {severityColor(
+						class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium {severityColor(
 							event.severity
 						)}"
 					>

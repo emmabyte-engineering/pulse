@@ -47,15 +47,22 @@ const config: Config = {
 				card: {
 					DEFAULT: 'hsl(var(--card) / <alpha-value>)',
 					foreground: 'hsl(var(--card-foreground) / <alpha-value>)'
+				},
+				brand: {
+					primary: '#FA586D',
+					secondary: '#FF6798',
+					highlight: '#FFBA71',
+					muted: '#8E4C50',
+					soft: '#FFE4E4'
 				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				md: 'calc(var(--radius) - 4px)',
+				sm: 'calc(var(--radius) - 8px)'
 			},
 			fontFamily: {
-				sans: ['Inter', ...fontFamily.sans]
+				sans: ['Montserrat', ...fontFamily.sans]
 			}
 		}
 	},

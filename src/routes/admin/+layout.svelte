@@ -23,14 +23,19 @@
 	<!-- Sidebar -->
 	<aside class="w-64 border-r border-border bg-card">
 		<div class="flex h-14 items-center border-b border-border px-6">
-			<a href="/admin" class="text-lg font-semibold">Pulse</a>
+			<a href="/admin" class="flex items-center gap-2">
+				<span
+					class="inline-block h-2.5 w-2.5 rounded-full bg-gradient-to-br from-[#FFBA71] to-[#FF6798]"
+				></span>
+				<span class="text-lg font-semibold">Pulse</span>
+			</a>
 		</div>
 
 		<nav class="space-y-1 p-4">
 			{#each navItems as item}
 				<a
 					href={item.href}
-					class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors
+					class="flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors
 						{page.url.pathname === item.href
 						? 'bg-accent text-accent-foreground'
 						: 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'}"
