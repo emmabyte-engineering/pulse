@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Better Auth Tables ─────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          String    @default("user")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions Session[]
+  accounts Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
+
+// ─── Observability Tables ───────────────────────────────────────────────────
+
+enum EventSource {
+  MAILERSEND
+  VERCEL
+  PLANETSCALE
+  APP
+}
+
+enum Severity {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  CRITICAL
+}
+
+model Event {
+  id             String      @id @default(cuid())
+  source         EventSource
+  eventType      String
+  severity       Severity    @default(INFO)
+  timestamp      DateTime    @default(now())
+
+  // Context
+  userId         String?
+  organizationId String?
+  emailAddress   String?
+
+  // Payload
+  summary        String?
+  metadata       Json?
+
+  // Deduplication
+  externalId     String?
+
+  // Retention
+  retainUntil    DateTime?
+
+  createdAt      DateTime    @default(now())
+
+  @@index([source, eventType])
+  @@index([timestamp])
+  @@index([emailAddress])
+  @@index([severity])
+  @@index([userId])
+  @@index([externalId])
+  @@map("event")
+}
+
+model Metric {
+  id          String      @id @default(cuid())
+  metricName  String
+  source      EventSource
+  periodStart DateTime
+  periodEnd   DateTime
+  value       Decimal     @db.Decimal(10, 4)
+  metadata    Json?
+
+  @@index([metricName, periodStart])
+  @@index([source, periodStart])
+  @@map("metric")
+}
+
+model AlertRule {
+  id               String      @id @default(cuid())
+  name             String
+  description      String?
+  source           EventSource
+  eventType        String?
+  conditionType    String      // THRESHOLD, RATE, OCCURRENCE
+  conditionValue   Decimal     @db.Decimal(10, 4)
+  windowMinutes    Int         @default(60)
+  enabled          Boolean     @default(true)
+  notifyEmail      String?
+  notifySlack      String?
+  lastTriggeredAt  DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@map("alert_rule")
+}
