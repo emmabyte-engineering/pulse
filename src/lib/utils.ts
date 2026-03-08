@@ -18,16 +18,16 @@ export function formatDate(date: Date | string): string {
 export function severityColor(severity: string): string {
 	switch (severity) {
 		case 'CRITICAL':
-			return 'text-red-500 bg-red-500/10';
+			return 'text-[#FA586D] bg-[#FA586D]/10';
 		case 'ERROR':
-			return 'text-red-400 bg-red-400/10';
+			return 'text-[#FF6798] bg-[#FF6798]/10';
 		case 'WARN':
-			return 'text-yellow-400 bg-yellow-400/10';
+			return 'text-[#FFBA71] bg-[#FFBA71]/10';
 		case 'INFO':
 			return 'text-blue-400 bg-blue-400/10';
 		case 'DEBUG':
-			return 'text-gray-400 bg-gray-400/10';
+			return 'text-neutral-500 bg-neutral-500/10';
 		default:
-			return 'text-gray-400 bg-gray-400/10';
+			return 'text-neutral-500 bg-neutral-500/10';
 	}
 }

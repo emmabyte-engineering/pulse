@@ -62,8 +62,8 @@
 		{/if}
 
 		{#if form?.newKey}
-			<div class="mt-4 rounded-md border border-yellow-500/50 bg-yellow-500/10 p-4">
-				<p class="text-sm font-medium text-yellow-400">
+			<div class="mt-4 rounded-md border border-[#FFBA71]/50 bg-[#FFBA71]/10 p-4">
+				<p class="text-sm font-medium text-[#FFBA71]">
 					API key created: {form.keyName}
 				</p>
 				<p class="mt-1 text-xs text-muted-foreground">

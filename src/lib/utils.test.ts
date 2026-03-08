@@ -16,15 +16,15 @@ describe('cn', () => {
 });
 
 describe('severityColor', () => {
-	it('returns red for CRITICAL', () => {
-		expect(severityColor('CRITICAL')).toContain('red-500');
+	it('returns brand red for CRITICAL', () => {
+		expect(severityColor('CRITICAL')).toContain('#FA586D');
 	});
 
 	it('returns blue for INFO', () => {
 		expect(severityColor('INFO')).toContain('blue-400');
 	});
 
-	it('returns gray for unknown', () => {
-		expect(severityColor('UNKNOWN')).toContain('gray-400');
+	it('returns neutral for unknown', () => {
+		expect(severityColor('UNKNOWN')).toContain('neutral-500');
 	});
 });
