@@ -168,3 +168,36 @@ model AlertRule {
 
   @@map("alert_rule")
 }
+
+model Setting {
+  key       String   @id
+  value     String   // AES-256-GCM encrypted for secrets
+  secret    Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@map("setting")
+}
+
+model Integration {
+  id          String      @id @default(cuid())
+  source      EventSource @unique
+  name        String
+  enabled     Boolean     @default(true)
+  config      String      @default("{}") // AES-256-GCM encrypted JSON
+  connectedAt DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("integration")
+}
+
+model NotificationChannel {
+  id        String   @id @default(cuid())
+  type      String   // mailersend, smtp, slack, clickup
+  name      String
+  enabled   Boolean  @default(true)
+  config    String   // AES-256-GCM encrypted JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_channel")
+}

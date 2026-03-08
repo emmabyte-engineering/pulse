@@ -1,42 +1,25 @@
 import type { PageServerLoad } from './$types';
-import { db } from '$server/db';
+import { getDashboardStats, getEventTimeSeries, getSeverityDistribution } from '$server/stats';
+import { getConnectedSources } from '$server/integrations';
 
-export const load: PageServerLoad = async () => {
-	const now = new Date();
-	const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-	const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+export const load: PageServerLoad = async ({ url }) => {
+	const hours = Math.min(Math.max(Number(url.searchParams.get('range') ?? '24') || 24, 1), 720);
+	const connectedSources = await getConnectedSources();
 
-	const [totalEvents, recentEvents, criticalEvents, sourceBreakdown] = await Promise.all([
-		db.event.count(),
-		db.event.count({ where: { timestamp: { gte: oneDayAgo } } }),
-		db.event.count({
-			where: {
-				severity: { in: ['ERROR', 'CRITICAL'] },
-				timestamp: { gte: oneWeekAgo }
-			}
-		}),
-		db.event.groupBy({
-			by: ['source'],
-			_count: true,
-			where: { timestamp: { gte: oneWeekAgo } }
-		})
-	]);
+	const hasIntegrations = connectedSources.length > 0;
 
-	const latestEvents = await db.event.findMany({
-		take: 10,
-		orderBy: { timestamp: 'desc' }
-	});
+	const [stats, timeSeries, severityDist] = hasIntegrations
+		? await Promise.all([
+				getDashboardStats(hours, connectedSources),
+				getEventTimeSeries(hours),
+				getSeverityDistribution(undefined, hours)
+			])
+		: [null, [], []];
 
 	return {
-		stats: {
-			totalEvents,
-			recentEvents,
-			criticalEvents,
-			sourceBreakdown: sourceBreakdown.map((s) => ({
-				source: s.source,
-				count: s._count
-			}))
-		},
-		latestEvents
+		hasIntegrations,
+		stats,
+		timeSeries: timeSeries as { label: string; value: number }[],
+		severityDist
 	};
 };

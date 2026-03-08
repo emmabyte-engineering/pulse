@@ -1,7 +1,8 @@
 import { json, error, text } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { processVercelLogDrain } from '$server/webhooks/vercel';
-import { env } from '$env/dynamic/private';
+import { getIntegrationSecret } from '$server/integrations';
+import { getSettingWithFallback } from '$server/settings';
 
 // Vercel sends a GET request to verify the endpoint
 export const GET: RequestHandler = async ({ url }) => {
@@ -13,11 +14,16 @@ export const GET: RequestHandler = async ({ url }) => {
 };
 
 export const POST: RequestHandler = async ({ request }) => {
-	if (env.VERCEL_WEBHOOK_SECRET) {
-		const verify = request.headers.get('x-vercel-verify');
-		if (verify !== env.VERCEL_WEBHOOK_SECRET) {
-			error(401, 'Invalid verification header');
-		}
+	const secret =
+		(await getIntegrationSecret('VERCEL', 'webhookSecret')) ??
+		(await getSettingWithFallback('VERCEL_WEBHOOK_SECRET'));
+	if (!secret) {
+		console.warn('Vercel webhook received but no secret configured — rejecting');
+		error(401, 'Webhook secret not configured');
+	}
+	const verify = request.headers.get('x-vercel-verify');
+	if (verify !== secret) {
+		error(401, 'Invalid verification header');
 	}
 
 	try {

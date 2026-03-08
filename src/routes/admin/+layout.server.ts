@@ -1,12 +1,16 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
+import { listIntegrations } from '$server/integrations';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		redirect(302, '/login');
 	}
 
+	const integrations = await listIntegrations();
+
 	return {
-		user: locals.user
+		user: locals.user,
+		integrations
 	};
 };

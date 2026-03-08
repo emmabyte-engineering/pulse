@@ -38,10 +38,14 @@ export async function validateApiKey(key: string): Promise<boolean> {
 	if (!apiKey) return false;
 	if (apiKey.expiresAt && apiKey.expiresAt < new Date()) return false;
 
-	await db.apiKey.update({
-		where: { id: apiKey.id },
-		data: { lastUsedAt: new Date() }
-	});
+	// Debounce: only update lastUsedAt if stale by 5+ minutes
+	const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+	if (!apiKey.lastUsedAt || apiKey.lastUsedAt < fiveMinutesAgo) {
+		await db.apiKey.update({
+			where: { id: apiKey.id },
+			data: { lastUsedAt: new Date() }
+		});
+	}
 
 	return true;
 }

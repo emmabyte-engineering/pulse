@@ -10,13 +10,13 @@
 	<!-- Animated gradient background -->
 	<div class="pointer-events-none absolute inset-0">
 		<div
-			class="absolute -left-1/4 -top-1/4 h-[600px] w-[600px] animate-[drift_20s_ease-in-out_infinite] rounded-full bg-[#FA586D]/15 blur-[120px]"
+			class="absolute -left-1/4 -top-1/4 h-[600px] w-[600px] animate-[drift_20s_ease-in-out_infinite] rounded-full bg-[#FA586D]/8 blur-[120px]"
 		></div>
 		<div
-			class="absolute -bottom-1/4 -right-1/4 h-[500px] w-[500px] animate-[drift_25s_ease-in-out_infinite_reverse] rounded-full bg-[#FFBA71]/15 blur-[120px]"
+			class="absolute -bottom-1/4 -right-1/4 h-[500px] w-[500px] animate-[drift_25s_ease-in-out_infinite_reverse] rounded-full bg-[#FFBA71]/8 blur-[120px]"
 		></div>
 		<div
-			class="absolute left-1/3 top-1/2 h-[400px] w-[400px] animate-[drift_18s_ease-in-out_infinite_2s] rounded-full bg-[#FF6798]/10 blur-[100px]"
+			class="absolute left-1/3 top-1/2 h-[400px] w-[400px] animate-[drift_18s_ease-in-out_infinite_2s] rounded-full bg-[#FF6798]/5 blur-[100px]"
 		></div>
 	</div>
 
