@@ -3,7 +3,7 @@ import { getDashboardStats, getEventTimeSeries, getSeverityDistribution } from '
 import { getConnectedSources } from '$server/integrations';
 
 export const load: PageServerLoad = async ({ url }) => {
-	const hours = Number(url.searchParams.get('range') ?? '24');
+	const hours = Math.min(Math.max(Number(url.searchParams.get('range') ?? '24') || 24, 1), 720);
 	const connectedSources = await getConnectedSources();
 
 	const hasIntegrations = connectedSources.length > 0;

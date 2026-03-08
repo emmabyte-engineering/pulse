@@ -17,9 +17,9 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		redirect(302, `/admin/integrations/add/${params.slug}`);
 	}
 
-	const hours = Number(url.searchParams.get('range') ?? '24');
+	const hours = Math.min(Math.max(Number(url.searchParams.get('range') ?? '24') || 24, 1), 720);
 	const q = url.searchParams.get('q') ?? '';
-	const severity = url.searchParams.get('status') ?? '';
+	const severity = url.searchParams.get('severity') ?? '';
 	const eventType = url.searchParams.get('type') ?? '';
 
 	const [stats, timeSeries, severityDist] = await Promise.all([

@@ -17,11 +17,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	const secret =
 		(await getIntegrationSecret('VERCEL', 'webhookSecret')) ??
 		(await getSettingWithFallback('VERCEL_WEBHOOK_SECRET'));
-	if (secret) {
-		const verify = request.headers.get('x-vercel-verify');
-		if (verify !== secret) {
-			error(401, 'Invalid verification header');
-		}
+	if (!secret) {
+		console.warn('Vercel webhook received but no secret configured — rejecting');
+		error(401, 'Webhook secret not configured');
+	}
+	const verify = request.headers.get('x-vercel-verify');
+	if (verify !== secret) {
+		error(401, 'Invalid verification header');
 	}
 
 	try {

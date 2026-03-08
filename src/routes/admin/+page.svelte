@@ -8,7 +8,7 @@
 	import { Activity, CheckCircle, Key, Wifi, Plus, ArrowRight } from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
-	const stats = $derived(data.stats!);
+	const stats = $derived(data.stats);
 
 	const sourceLabels: Record<string, string> = {
 		VERCEL: 'Vercel',
@@ -58,16 +58,16 @@
 
 		<!-- Stat Cards -->
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-			<StatCard label="Total Events" value={stats.totalEvents} trend={stats.trend}>
+			<StatCard label="Total Events" value={stats?.totalEvents ?? 0} trend={stats?.trend}>
 				{#snippet icon()}<Activity class="h-4 w-4" />{/snippet}
 			</StatCard>
-			<StatCard label="Success Rate" value="{stats.successRate}%">
+			<StatCard label="Success Rate" value="{stats?.successRate ?? 100}%">
 				{#snippet icon()}<CheckCircle class="h-4 w-4" />{/snippet}
 			</StatCard>
-			<StatCard label="Active API Keys" value={stats.apiKeyCount}>
+			<StatCard label="Active API Keys" value={stats?.apiKeyCount ?? 0}>
 				{#snippet icon()}<Key class="h-4 w-4" />{/snippet}
 			</StatCard>
-			<StatCard label="Connected Services" value={stats.connectedServices}>
+			<StatCard label="Connected Services" value={stats?.connectedServices ?? 0}>
 				{#snippet icon()}<Wifi class="h-4 w-4" />{/snippet}
 			</StatCard>
 		</div>
@@ -88,7 +88,7 @@
 				<h2 class="text-lg font-semibold">Service Status</h2>
 				<p class="mt-1 text-sm text-muted-foreground">Events by source</p>
 				<div class="mt-4 space-y-4">
-					{#each stats.serviceStats as service}
+					{#each stats?.serviceStats ?? [] as service}
 						<a
 							href="/admin/services/{sourceSlugs[service.source]}"
 							class="flex items-center justify-between rounded-lg p-3 transition-colors hover:bg-accent"
@@ -124,7 +124,7 @@
 				<p class="mt-1 text-sm text-muted-foreground">Latest events across all services</p>
 			</div>
 			<div class="divide-y divide-border">
-				{#each stats.latestEvents as event}
+				{#each stats?.latestEvents ?? [] as event}
 					<div class="flex items-center gap-4 px-6 py-3">
 						<SeverityBadge severity={event.severity} />
 						<span class="flex-1 truncate text-sm">{event.summary ?? event.eventType}</span>

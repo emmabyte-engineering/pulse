@@ -30,6 +30,8 @@
 			: ''
 	);
 
+	const gradientId = `area-fill-${Math.random().toString(36).slice(2, 9)}`;
+
 	const yTicks = $derived(
 		[0, 0.25, 0.5, 0.75, 1].map((pct) => ({
 			value: Math.round(maxValue * pct),
@@ -41,7 +43,7 @@
 {#if data.length > 0}
 	<svg viewBox="0 0 {chartWidth} {height}" class="w-full" preserveAspectRatio="xMidYMid meet">
 		<defs>
-			<linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1">
+			<linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
 				<stop offset="0%" stop-color={color} stop-opacity="0.3" />
 				<stop offset="100%" stop-color={color} stop-opacity="0" />
 			</linearGradient>
@@ -69,7 +71,7 @@
 		{/each}
 
 		<!-- Area -->
-		<polygon points={areaPoints} fill="url(#area-fill)" />
+		<polygon points={areaPoints} fill="url(#{gradientId})" />
 
 		<!-- Line -->
 		<polyline points={polylinePoints} fill="none" stroke={color} stroke-width="2" />

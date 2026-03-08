@@ -12,16 +12,24 @@ export async function getEventTimeSeries(
 ): Promise<TimeSeriesPoint[]> {
 	const since = new Date(Date.now() - hours * 60 * 60 * 1000);
 
-	const sourceFilter = source ? `AND "source" = '${source}'` : '';
-
-	const rows = await db.$queryRawUnsafe<{ bucket: Date; count: bigint }[]>(
-		`SELECT date_trunc('hour', "timestamp") as bucket, COUNT(*) as count
-		 FROM "event"
-		 WHERE "timestamp" >= $1 ${sourceFilter}
-		 GROUP BY bucket
-		 ORDER BY bucket ASC`,
-		since
-	);
+	const rows = source
+		? await db.$queryRawUnsafe<{ bucket: Date; count: bigint }[]>(
+				`SELECT date_trunc('hour', "timestamp") as bucket, COUNT(*) as count
+				 FROM "event"
+				 WHERE "timestamp" >= $1 AND "source" = $2
+				 GROUP BY bucket
+				 ORDER BY bucket ASC`,
+				since,
+				source
+			)
+		: await db.$queryRawUnsafe<{ bucket: Date; count: bigint }[]>(
+				`SELECT date_trunc('hour', "timestamp") as bucket, COUNT(*) as count
+				 FROM "event"
+				 WHERE "timestamp" >= $1
+				 GROUP BY bucket
+				 ORDER BY bucket ASC`,
+				since
+			);
 
 	return rows.map((r) => ({
 		label: new Date(r.bucket).toLocaleTimeString('en-US', { hour: 'numeric' }),

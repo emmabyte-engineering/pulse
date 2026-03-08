@@ -13,11 +13,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	const secret =
 		(await getIntegrationSecret('MAILERSEND', 'webhookSecret')) ??
 		(await getSettingWithFallback('MAILERSEND_WEBHOOK_SECRET'));
-	if (secret) {
-		const signature = request.headers.get('signature') ?? '';
-		if (!verifyMailerSendSignature(body, signature, secret)) {
-			error(401, 'Invalid signature');
-		}
+	if (!secret) {
+		console.warn('MailerSend webhook received but no secret configured — rejecting');
+		error(401, 'Webhook secret not configured');
+	}
+	const signature = request.headers.get('signature') ?? '';
+	if (!verifyMailerSendSignature(body, signature, secret)) {
+		error(401, 'Invalid signature');
 	}
 
 	try {

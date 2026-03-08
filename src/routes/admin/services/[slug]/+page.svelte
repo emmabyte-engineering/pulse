@@ -105,7 +105,7 @@
 		/>
 		<select
 			value={data.filters.severity}
-			onchange={(e) => applyFilter('status', (e.target as HTMLSelectElement).value)}
+			onchange={(e) => applyFilter('severity', (e.target as HTMLSelectElement).value)}
 			class="h-9 rounded-lg border border-input bg-background px-3 text-sm"
 		>
 			<option value="">All severities</option>
