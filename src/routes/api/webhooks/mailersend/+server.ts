@@ -4,14 +4,18 @@ import {
 	verifyMailerSendSignature,
 	processMailerSendWebhook
 } from '$server/webhooks/mailersend';
-import { env } from '$env/dynamic/private';
+import { getIntegrationSecret } from '$server/integrations';
+import { getSettingWithFallback } from '$server/settings';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const body = await request.text();
 
-	if (env.MAILERSEND_WEBHOOK_SECRET) {
+	const secret =
+		(await getIntegrationSecret('MAILERSEND', 'webhookSecret')) ??
+		(await getSettingWithFallback('MAILERSEND_WEBHOOK_SECRET'));
+	if (secret) {
 		const signature = request.headers.get('signature') ?? '';
-		if (!verifyMailerSendSignature(body, signature, env.MAILERSEND_WEBHOOK_SECRET)) {
+		if (!verifyMailerSendSignature(body, signature, secret)) {
 			error(401, 'Invalid signature');
 		}
 	}

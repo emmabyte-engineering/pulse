@@ -5,7 +5,16 @@ import { env } from '$env/dynamic/private';
 
 const ALLOWED_DOMAIN = 'emmabyte.io';
 
+const socialProviders: Record<string, unknown> = {};
+if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
+	socialProviders.google = {
+		clientId: env.GOOGLE_CLIENT_ID,
+		clientSecret: env.GOOGLE_CLIENT_SECRET
+	};
+}
+
 export const auth = betterAuth({
+	baseURL: env.BETTER_AUTH_URL ?? 'http://localhost:5173',
 	database: prismaAdapter(db, {
 		provider: 'postgresql'
 	}),
@@ -13,12 +22,7 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true
 	},
-	socialProviders: {
-		google: {
-			clientId: env.GOOGLE_CLIENT_ID!,
-			clientSecret: env.GOOGLE_CLIENT_SECRET!
-		}
-	},
+	socialProviders,
 	session: {
 		cookieCache: {
 			enabled: true,

@@ -29,6 +29,9 @@ importers:
       dotenv:
         specifier: ^17.3.1
         version: 17.3.1
+      lucide-svelte:
+        specifier: ^0.577.0
+        version: 0.577.0(svelte@5.53.7)
       mode-watcher:
         specifier: ^0.5.0
         version: 0.5.1(svelte@5.53.7)
@@ -1679,6 +1682,11 @@ packages:
   lru.min@1.1.4:
     resolution: {integrity: sha512-DqC6n3QQ77zdFpCMASA1a3Jlb64Hv2N2DciFGkO/4L9+q/IpIAuRlKOvCXabtRW6cQf8usbmM6BE/TOPysCdIA==}
     engines: {bun: '>=1.0.0', deno: '>=1.30.0', node: '>=8.0.0'}
+
+  lucide-svelte@0.577.0:
+    resolution: {integrity: sha512-0i88o57KsaHWnc80J57fY99CWzlZsSdtH5kKjLUJa7z8dum/9/AbINNLzJ7NiRFUdOgMnfAmJt8jFbW2zeC5qQ==}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5.0.0-next.42
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
@@ -3831,6 +3839,10 @@ snapshots:
   loupe@3.2.1: {}
 
   lru.min@1.1.4: {}
+
+  lucide-svelte@0.577.0(svelte@5.53.7):
+    dependencies:
+      svelte: 5.53.7
 
   lz-string@1.5.0: {}
 

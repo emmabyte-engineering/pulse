@@ -1,6 +1,6 @@
-import { env } from '$env/dynamic/private';
+import { getEnabledChannels, type ChannelConfig } from './notification-channels';
 
-interface AlertNotification {
+export interface AlertNotification {
 	alertName: string;
 	description?: string | null;
 	source: string;
@@ -24,99 +24,138 @@ function formatAlertMessage(alert: AlertNotification): string {
 	return `[Pulse Alert] ${alert.alertName}\n\nSource: ${scope}\nCondition: ${condition}\nWindow: ${alert.windowMinutes} minutes\n${alert.description ? `\n${alert.description}` : ''}`;
 }
 
-export async function notifySlack(alert: AlertNotification): Promise<void> {
-	const webhookUrl = env.SLACK_WEBHOOK_URL;
-	if (!webhookUrl) return;
+// ─── Channel Dispatchers ─────────────────────────────────────────────────────
 
-	try {
-		const response = await fetch(webhookUrl, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				text: formatAlertMessage(alert),
-				blocks: [
-					{
-						type: 'header',
-						text: { type: 'plain_text', text: `🚨 ${alert.alertName}` }
-					},
-					{
-						type: 'section',
-						fields: [
-							{
-								type: 'mrkdwn',
-								text: `*Source:*\n${alert.eventType ? `${alert.source}/${alert.eventType}` : alert.source}`
-							},
-							{
-								type: 'mrkdwn',
-								text: `*Condition:*\n${alert.conditionType}`
-							},
-							{
-								type: 'mrkdwn',
-								text: `*Value:*\n${alert.conditionType === 'RATE' ? `${(alert.actualValue * 100).toFixed(1)}%` : alert.actualValue}`
-							},
-							{
-								type: 'mrkdwn',
-								text: `*Window:*\n${alert.windowMinutes}m`
-							}
-						]
-					}
-				]
-			})
-		});
+async function sendViaMailerSend(config: ChannelConfig, to: string | null, alert: AlertNotification): Promise<void> {
+	const recipient = to ?? config.fromEmail;
+	const response = await fetch('https://api.mailersend.com/v1/email', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${config.apiKey}`
+		},
+		body: JSON.stringify({
+			from: { email: config.fromEmail, name: config.fromName ?? 'Pulse Alerts' },
+			to: [{ email: recipient }],
+			subject: `[Pulse] ${alert.alertName}`,
+			text: formatAlertMessage(alert)
+		})
+	});
 
-		if (!response.ok) {
-			console.error(`Slack notification failed: ${response.status} ${await response.text()}`);
-		}
-	} catch (err) {
-		console.error('Slack notification error:', err);
+	if (!response.ok) {
+		console.error(`MailerSend notification failed: ${response.status} ${await response.text()}`);
 	}
 }
 
-export async function notifyEmail(
-	to: string,
-	alert: AlertNotification
+async function sendViaSmtp(config: ChannelConfig, to: string | null, alert: AlertNotification): Promise<void> {
+	// Use Node's built-in net/tls for a minimal SMTP send
+	// For now, log a warning — full SMTP requires nodemailer or similar
+	// This can be swapped in when nodemailer is added as a dependency
+	console.warn(`SMTP channel configured but not yet implemented. Would send to ${to ?? config.fromEmail} via ${config.host}:${config.port}`);
+}
+
+async function sendViaSlack(config: ChannelConfig, alert: AlertNotification): Promise<void> {
+	const response = await fetch(config.webhookUrl, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			text: formatAlertMessage(alert),
+			blocks: [
+				{
+					type: 'header',
+					text: { type: 'plain_text', text: `🚨 ${alert.alertName}` }
+				},
+				{
+					type: 'section',
+					fields: [
+						{
+							type: 'mrkdwn',
+							text: `*Source:*\n${alert.eventType ? `${alert.source}/${alert.eventType}` : alert.source}`
+						},
+						{
+							type: 'mrkdwn',
+							text: `*Condition:*\n${alert.conditionType}`
+						},
+						{
+							type: 'mrkdwn',
+							text: `*Value:*\n${alert.conditionType === 'RATE' ? `${(alert.actualValue * 100).toFixed(1)}%` : alert.actualValue}`
+						},
+						{
+							type: 'mrkdwn',
+							text: `*Window:*\n${alert.windowMinutes}m`
+						}
+					]
+				}
+			]
+		})
+	});
+
+	if (!response.ok) {
+		console.error(`Slack notification failed: ${response.status} ${await response.text()}`);
+	}
+}
+
+async function sendViaClickUp(config: ChannelConfig, alert: AlertNotification): Promise<void> {
+	const response = await fetch(`https://api.clickup.com/api/v2/list/${config.listId}/task`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: config.apiToken
+		},
+		body: JSON.stringify({
+			name: `[Pulse Alert] ${alert.alertName}`,
+			description: formatAlertMessage(alert),
+			priority: alert.conditionType === 'OCCURRENCE' ? 2 : 1,
+			status: 'to do'
+		})
+	});
+
+	if (!response.ok) {
+		console.error(`ClickUp notification failed: ${response.status} ${await response.text()}`);
+	}
+}
+
+// ─── Main Dispatcher ─────────────────────────────────────────────────────────
+
+async function dispatchToChannel(
+	channel: { type: string; name: string; config: ChannelConfig },
+	alert: AlertNotification,
+	emailRecipient: string | null
 ): Promise<void> {
-	const apiKey = env.MAILERSEND_API_KEY;
-	const from = env.ALERT_FROM_EMAIL;
-	if (!apiKey || !from) return;
-
 	try {
-		const response = await fetch('https://api.mailersend.com/v1/email', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${apiKey}`
-			},
-			body: JSON.stringify({
-				from: { email: from, name: 'Pulse Alerts' },
-				to: [{ email: to }],
-				subject: `[Pulse] ${alert.alertName}`,
-				text: formatAlertMessage(alert)
-			})
-		});
-
-		if (!response.ok) {
-			console.error(`Email notification failed: ${response.status} ${await response.text()}`);
+		switch (channel.type) {
+			case 'mailersend':
+				await sendViaMailerSend(channel.config, emailRecipient, alert);
+				break;
+			case 'smtp':
+				await sendViaSmtp(channel.config, emailRecipient, alert);
+				break;
+			case 'slack':
+				await sendViaSlack(channel.config, alert);
+				break;
+			case 'clickup':
+				await sendViaClickUp(channel.config, alert);
+				break;
+			default:
+				console.warn(`Unknown notification channel type: ${channel.type}`);
 		}
 	} catch (err) {
-		console.error('Email notification error:', err);
+		console.error(`Notification failed for channel "${channel.name}" (${channel.type}):`, err);
 	}
 }
 
 export async function sendAlertNotifications(
 	alert: AlertNotification,
 	notifyEmailAddr?: string | null,
-	notifySlackUrl?: string | null
+	_notifySlackUrl?: string | null
 ): Promise<void> {
-	const promises: Promise<void>[] = [];
+	const channels = await getEnabledChannels();
 
-	// Always try the global Slack webhook
-	promises.push(notifySlack(alert));
-
-	// Send email if configured on the alert rule
-	if (notifyEmailAddr) {
-		promises.push(notifyEmail(notifyEmailAddr, alert));
+	if (channels.length === 0) {
+		return;
 	}
 
-	await Promise.allSettled(promises);
+	await Promise.allSettled(
+		channels.map((ch) => dispatchToChannel(ch, alert, notifyEmailAddr ?? null))
+	);
 }
