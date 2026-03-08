@@ -100,8 +100,7 @@ async function evaluateRule(rule: AlertRule): Promise<void> {
 				actualValue,
 				windowMinutes: rule.windowMinutes
 			},
-			rule.notifyEmail,
-			rule.notifySlack
+			rule.notifyEmail
 		);
 
 		console.log(`Alert triggered: "${rule.name}" (${rule.conditionType}: ${actualValue})`);

@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { ModeWatcher } from 'mode-watcher';
 	import ThemeToggle from '$components/ThemeToggle.svelte';
+	import type { Snippet } from 'svelte';
 	import {
 		LayoutDashboard,
 		Key,
@@ -13,11 +14,10 @@
 		Mail,
 		Database,
 		Globe,
-		Plus,
-		CheckCircle
+		Plus
 	} from 'lucide-svelte';
 
-	let { data, children }: { data: LayoutData; children: any } = $props();
+	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 	const overviewItems = [
 		{ href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -117,14 +117,10 @@
 
 		<!-- Bottom section -->
 		<div class="border-t border-border p-4">
-			<div class="flex items-center gap-2 px-3 py-1">
-				<CheckCircle class="h-3.5 w-3.5 text-emerald-500" />
-				<span class="text-xs text-muted-foreground">All operational</span>
-				<div class="ml-auto">
-					<ThemeToggle />
-				</div>
+			<div class="flex items-center justify-between px-3 py-1">
+				<ThemeToggle />
 			</div>
-			<div class="mt-3 flex items-center justify-between px-3">
+			<div class="mt-2 flex items-center justify-between px-3">
 				<span class="truncate text-xs text-muted-foreground">{data.user.email}</span>
 				<button
 					onclick={handleSignOut}

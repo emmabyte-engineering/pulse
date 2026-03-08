@@ -85,6 +85,7 @@
 						</div>
 
 						{#if editingChannelId === channel.id && typeDef}
+							{@const existingConfig = data.channelConfigs[channel.id] ?? {}}
 							<form
 								method="POST"
 								action="?/updateChannel"
@@ -109,7 +110,7 @@
 										{#if field.type === 'select' && field.options}
 											<select id="ch-{field.key}-{channel.id}" name="config.{field.key}" class="mt-1 flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm">
 												{#each field.options as opt}
-													<option value={opt.value}>{opt.label}</option>
+													<option value={opt.value} selected={existingConfig[field.key] === opt.value}>{opt.label}</option>
 												{/each}
 											</select>
 										{:else}
@@ -117,8 +118,8 @@
 												id="ch-{field.key}-{channel.id}"
 												name="config.{field.key}"
 												type={field.type}
-												placeholder={field.placeholder ?? ''}
-												required={field.required}
+												value={existingConfig[field.key] ?? ''}
+												placeholder={field.type === 'password' ? 'Leave blank to keep current' : (field.placeholder ?? '')}
 												class="mt-1 flex h-9 w-full rounded-lg border border-input bg-background px-3 font-mono text-sm"
 											/>
 										{/if}
@@ -262,6 +263,6 @@
 	<div class="rounded-2xl border border-border bg-card p-6">
 		<h2 class="text-lg font-semibold">Health Check</h2>
 		<p class="mt-1 text-sm text-muted-foreground">Use this endpoint to verify the service is running.</p>
-		<dd class="mt-3 rounded-lg bg-muted px-3 py-2 font-mono text-xs">GET /api/health</dd>
+		<code class="mt-3 block rounded-lg bg-muted px-3 py-2 font-mono text-xs">GET /api/health</code>
 	</div>
 </div>

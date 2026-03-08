@@ -146,8 +146,7 @@ async function dispatchToChannel(
 
 export async function sendAlertNotifications(
 	alert: AlertNotification,
-	notifyEmailAddr?: string | null,
-	_notifySlackUrl?: string | null
+	notifyEmailAddr?: string | null
 ): Promise<void> {
 	const channels = await getEnabledChannels();
 

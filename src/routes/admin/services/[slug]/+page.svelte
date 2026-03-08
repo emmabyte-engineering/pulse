@@ -13,9 +13,14 @@
 	let { data }: { data: PageData } = $props();
 
 	let searchInput = $state('');
+	let lastServerQ = '';
 
 	$effect(() => {
-		searchInput = data.filters.q;
+		const q = data.filters.q;
+		if (q !== lastServerQ) {
+			searchInput = q;
+			lastServerQ = q;
+		}
 	});
 
 	function applyFilter(key: string, value: string) {
