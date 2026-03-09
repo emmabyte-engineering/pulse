@@ -9,6 +9,7 @@
       <stop offset="100%" stop-color="#FF6798"/>
     </linearGradient>
   </defs>
+  <rect width="128" height="128" rx="28" fill="white"/>
   <rect width="128" height="128" rx="28" fill="url(#bg)"/>
   <polyline
     points="32,64 48,64 56,40 68,88 76,52 84,64 96,64"

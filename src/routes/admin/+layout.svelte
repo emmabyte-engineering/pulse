@@ -10,6 +10,7 @@
 		LayoutDashboard,
 		Key,
 		Settings,
+		Users,
 		Triangle,
 		Mail,
 		Database,
@@ -21,6 +22,7 @@
 
 	const overviewItems = [
 		{ href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+		{ href: '/admin/waitlist', label: 'Waitlist', icon: Users },
 		{ href: '/admin/api-keys', label: 'API Keys', icon: Key },
 		{ href: '/admin/settings', label: 'Settings', icon: Settings }
 	];

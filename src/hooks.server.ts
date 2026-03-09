@@ -9,7 +9,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		headers: event.request.headers
 	});
 
-	event.locals.user = session?.user ?? null;
+	event.locals.user = (session?.user as App.Locals['user']) ?? null;
 	event.locals.session = session?.session ?? null;
 
 	return resolve(event);

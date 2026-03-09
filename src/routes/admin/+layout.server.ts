@@ -7,6 +7,10 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		redirect(302, '/login');
 	}
 
+	if (locals.user.role !== 'admin') {
+		redirect(302, '/');
+	}
+
 	const integrations = await listIntegrations();
 
 	return {
