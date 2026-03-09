@@ -118,8 +118,8 @@ jobs:
           context: .
           push: true
           tags: |
-            emmabyte/pulse:latest
-            emmabyte/pulse:${{ github.sha }}
+            emmabyteeng/pulse:latest
+            emmabyteeng/pulse:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

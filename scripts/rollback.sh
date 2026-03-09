@@ -11,7 +11,7 @@
 #
 set -euo pipefail
 
-DOCKER_REPO="emmabyte/pulse"
+DOCKER_REPO="emmabyteeng/pulse"
 
 # Load Docker Hub credentials from .env
 if [ -f .env ]; then
