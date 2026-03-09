@@ -71,6 +71,10 @@ jobs:
             printf 'GOOGLE_CLIENT_ID=%s\n' "$GOOGLE_CLIENT_ID"
             printf 'GOOGLE_CLIENT_SECRET=%s\n' "$GOOGLE_CLIENT_SECRET"
             printf 'CLOUDFLARE_TUNNEL_TOKEN=%s\n' "$CLOUDFLARE_TUNNEL_TOKEN"
+            printf 'R2_ACCESS_KEY_ID=%s\n' "$R2_ACCESS_KEY_ID"
+            printf 'R2_SECRET_ACCESS_KEY=%s\n' "$R2_SECRET_ACCESS_KEY"
+            printf 'R2_ENDPOINT=%s\n' "$R2_ENDPOINT"
+            printf 'R2_BUCKET=%s\n' "$R2_BUCKET"
           } > /tmp/deploy.env
         env:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
@@ -78,13 +82,15 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
 
       - name: Sync project files to VM
         run: |
-          # Ensure the app directory exists
           ssh -o ConnectTimeout=30 ${{ secrets.SSH_USER }}@ssh.pulse.emmabyte.io "mkdir -p ~/apps/pulse"
 
-          # Sync project files (excludes .git, node_modules, etc.)
           rsync -az --delete \
             --exclude='.git' \
             --exclude='node_modules' \
@@ -95,30 +101,92 @@ jobs:
             -e "ssh -o ConnectTimeout=30" \
             ./ ${{ secrets.SSH_USER }}@ssh.pulse.emmabyte.io:~/apps/pulse/
 
-          # Copy .env
           scp /tmp/deploy.env ${{ secrets.SSH_USER }}@ssh.pulse.emmabyte.io:~/apps/pulse/.env
 
-      - name: Build and start containers
+      - name: Pre-deploy backup + build + deploy with rollback
         run: |
           ssh -o ConnectTimeout=30 ${{ secrets.SSH_USER }}@ssh.pulse.emmabyte.io << 'ENDSSH'
             set -e
             cd ~/apps/pulse
 
-            # Stop existing containers
-            docker compose down --remove-orphans 2>/dev/null || true
+            # ── Configure AWS CLI for R2 ──
+            export AWS_ACCESS_KEY_ID=$(grep R2_ACCESS_KEY_ID .env | cut -d= -f2-)
+            export AWS_SECRET_ACCESS_KEY=$(grep R2_SECRET_ACCESS_KEY .env | cut -d= -f2-)
+            export R2_ENDPOINT=$(grep R2_ENDPOINT .env | cut -d= -f2-)
+            export R2_BUCKET=$(grep R2_BUCKET .env | cut -d= -f2-)
+            export POSTGRES_USER=$(grep POSTGRES_USER .env | cut -d= -f2-)
+            export POSTGRES_DB=$(grep POSTGRES_DB .env | cut -d= -f2-)
+            export AWS_DEFAULT_REGION=auto
 
-            # Rebuild and restart
+            # ── Pre-deploy database backup ──
+            echo "==> Pre-deploy backup..."
+            if docker compose ps db --status running -q 2>/dev/null | grep -q .; then
+              bash scripts/backup.sh pre-deploy
+            else
+              echo "    DB not running, skipping backup"
+            fi
+
+            # ── Tag current image as :previous for rollback ──
+            echo "==> Tagging current image..."
+            docker tag pulse-app:latest pulse-app:previous 2>/dev/null || true
+
+            # ── Build new image ──
+            echo "==> Building new image..."
             docker compose build --no-cache app
+
+            # ── Stop and restart ──
+            echo "==> Deploying..."
+            docker compose down --remove-orphans 2>/dev/null || true
             docker compose up -d
 
-            # Wait for health check
-            sleep 10
+            # ── Wait for containers to be ready ──
+            echo "==> Waiting for app to start..."
+            sleep 15
 
-            # Verify deployment
-            docker compose ps
-            curl -sf http://localhost:3000/api/health || exit 1
+            # ── Smoke tests ──
+            echo "==> Running smoke tests..."
+            if bash scripts/smoke-test.sh http://localhost:3000; then
+              echo "==> Deployment successful!"
+              # Clean up failed image if it exists
+              docker rmi pulse-app:failed 2>/dev/null || true
+            else
+              echo "==> SMOKE TESTS FAILED — ROLLING BACK"
 
-            echo "Deployment successful!"
+              # Check if we have a previous image to roll back to
+              if docker image inspect pulse-app:previous &>/dev/null; then
+                docker compose stop app
+                docker tag pulse-app:latest pulse-app:failed
+                docker tag pulse-app:previous pulse-app:latest
+                docker compose up -d app
+
+                # Restore database from pre-deploy backup
+                echo "==> Restoring pre-deploy database backup..."
+                LATEST_BACKUP=$(aws s3 ls "s3://${R2_BUCKET}/backups/" \
+                  --endpoint-url "${R2_ENDPOINT}" \
+                  | grep "pre-deploy" \
+                  | sort -r \
+                  | head -1 \
+                  | awk '{print $4}')
+
+                if [ -n "$LATEST_BACKUP" ]; then
+                  TMPFILE="/tmp/pulse-rollback.sql.gz"
+                  aws s3 cp "s3://${R2_BUCKET}/backups/${LATEST_BACKUP}" "$TMPFILE" \
+                    --endpoint-url "${R2_ENDPOINT}" --no-progress
+                  gunzip -c "$TMPFILE" | docker compose exec -T db psql \
+                    -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" --quiet --single-transaction
+                  rm -f "$TMPFILE"
+                  echo "==> Database restored from: ${LATEST_BACKUP}"
+                fi
+
+                sleep 10
+                echo "==> Rollback complete. Verifying health..."
+                curl -sf http://localhost:3000/api/health || echo "WARNING: Health check failed after rollback"
+              else
+                echo "==> No previous image available for rollback"
+              fi
+
+              exit 1
+            fi
           ENDSSH
 
       - name: Verify public endpoint
