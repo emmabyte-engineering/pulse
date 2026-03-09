@@ -64,26 +64,16 @@ jobs:
             echo "NODE_ENV=production"
             echo "PUBLIC_APP_NAME=Pulse"
             echo "PUBLIC_APP_URL=https://pulse.emmabyte.io"
-            printf 'MAILERSEND_WEBHOOK_SECRET=%s\n' "$MAILERSEND_WEBHOOK_SECRET"
-            printf 'VERCEL_WEBHOOK_SECRET=%s\n' "$VERCEL_WEBHOOK_SECRET"
             printf 'GOOGLE_CLIENT_ID=%s\n' "$GOOGLE_CLIENT_ID"
             printf 'GOOGLE_CLIENT_SECRET=%s\n' "$GOOGLE_CLIENT_SECRET"
             printf 'CLOUDFLARE_TUNNEL_TOKEN=%s\n' "$CLOUDFLARE_TUNNEL_TOKEN"
-            printf 'MAILERSEND_API_KEY=%s\n' "$MAILERSEND_API_KEY"
-            printf 'ALERT_FROM_EMAIL=%s\n' "$ALERT_FROM_EMAIL"
-            printf 'SLACK_WEBHOOK_URL=%s\n' "$SLACK_WEBHOOK_URL"
           } > /tmp/deploy.env
         env:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           BETTER_AUTH_SECRET: ${{ secrets.ENCRYPTION_KEY }}
-          MAILERSEND_WEBHOOK_SECRET: ${{ secrets.MAILERSEND_WEBHOOK_SECRET }}
-          VERCEL_WEBHOOK_SECRET: ${{ secrets.VERCEL_WEBHOOK_SECRET }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
-          MAILERSEND_API_KEY: ${{ secrets.MAILERSEND_API_KEY }}
-          ALERT_FROM_EMAIL: ${{ secrets.ALERT_FROM_EMAIL }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Sync project files to VM
         run: |
