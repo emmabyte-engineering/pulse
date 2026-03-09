@@ -2,7 +2,7 @@
 #
 # Database backup to Cloudflare R2
 # Usage: ./scripts/backup.sh [tag]
-#   tag: optional label (e.g., "pre-deploy", "daily", "manual")
+#   tag: label for the backup (e.g., "pre-deploy-abc1234", "daily", "manual")
 #
 # Required env vars:
 #   R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT, R2_BUCKET

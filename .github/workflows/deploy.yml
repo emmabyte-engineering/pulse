@@ -6,6 +6,11 @@ on:
     types: [completed]
     branches: [main]
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy (default: latest)'
+        required: false
+        default: 'latest'
 
 jobs:
   deploy:
@@ -17,6 +22,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Determine image tag
+        id: image
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.image_tag || 'latest' }}"
+          else
+            TAG="${{ github.event.workflow_run.head_sha }}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Deploying image: emmabyte/pulse:${TAG}"
 
       - name: Install cloudflared
         run: |
@@ -75,6 +91,9 @@ jobs:
             printf 'R2_SECRET_ACCESS_KEY=%s\n' "$R2_SECRET_ACCESS_KEY"
             printf 'R2_ENDPOINT=%s\n' "$R2_ENDPOINT"
             printf 'R2_BUCKET=%s\n' "$R2_BUCKET"
+            printf 'DOCKERHUB_USERNAME=%s\n' "$DOCKERHUB_USERNAME"
+            printf 'DOCKERHUB_TOKEN=%s\n' "$DOCKERHUB_TOKEN"
+            printf 'DOCKER_IMAGE=emmabyte/pulse:%s\n' "${{ steps.image.outputs.tag }}"
           } > /tmp/deploy.env
         env:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
@@ -86,6 +105,8 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Sync project files to VM
         run: |
@@ -103,13 +124,15 @@ jobs:
 
           scp /tmp/deploy.env ${{ secrets.SSH_USER }}@ssh.pulse.emmabyte.io:~/apps/pulse/.env
 
-      - name: Pre-deploy backup + build + deploy with rollback
+      - name: Pre-deploy backup + pull + deploy with rollback
+        env:
+          DEPLOY_TAG: ${{ steps.image.outputs.tag }}
         run: |
           ssh -o ConnectTimeout=30 ${{ secrets.SSH_USER }}@ssh.pulse.emmabyte.io << 'ENDSSH'
             set -e
             cd ~/apps/pulse
 
-            # ── Configure AWS CLI for R2 ──
+            # ── Load env vars ──
             export AWS_ACCESS_KEY_ID=$(grep R2_ACCESS_KEY_ID .env | cut -d= -f2-)
             export AWS_SECRET_ACCESS_KEY=$(grep R2_SECRET_ACCESS_KEY .env | cut -d= -f2-)
             export R2_ENDPOINT=$(grep R2_ENDPOINT .env | cut -d= -f2-)
@@ -117,24 +140,29 @@ jobs:
             export POSTGRES_USER=$(grep POSTGRES_USER .env | cut -d= -f2-)
             export POSTGRES_DB=$(grep POSTGRES_DB .env | cut -d= -f2-)
             export AWS_DEFAULT_REGION=auto
+            DEPLOY_TAG=$(grep DOCKER_IMAGE .env | cut -d: -f2-)
+            DOCKERHUB_USER=$(grep DOCKERHUB_USERNAME .env | cut -d= -f2-)
+            DOCKERHUB_TOKEN=$(grep DOCKERHUB_TOKEN .env | cut -d= -f2-)
 
-            # ── Pre-deploy database backup ──
+            # ── Record current image for rollback ──
+            CURRENT_IMAGE=$(docker compose images app --format '{{.Repository}}:{{.Tag}}' 2>/dev/null | head -1 || echo "")
+            echo "Current image: ${CURRENT_IMAGE:-none}"
+
+            # ── Pre-deploy database backup (tagged with git SHA) ──
             echo "==> Pre-deploy backup..."
             if docker compose ps db --status running -q 2>/dev/null | grep -q .; then
-              bash scripts/backup.sh pre-deploy
+              export GIT_SHA="${DEPLOY_TAG}"
+              bash scripts/backup.sh "pre-deploy-${DEPLOY_TAG}"
             else
               echo "    DB not running, skipping backup"
             fi
 
-            # ── Tag current image as :previous for rollback ──
-            echo "==> Tagging current image..."
-            docker tag pulse-app:latest pulse-app:previous 2>/dev/null || true
+            # ── Login to Docker Hub and pull new image ──
+            echo "==> Pulling emmabyte/pulse:${DEPLOY_TAG}..."
+            echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USER}" --password-stdin
+            docker pull "emmabyte/pulse:${DEPLOY_TAG}"
 
-            # ── Build new image ──
-            echo "==> Building new image..."
-            docker compose build --no-cache app
-
-            # ── Stop and restart ──
+            # ── Deploy ──
             echo "==> Deploying..."
             docker compose down --remove-orphans 2>/dev/null || true
             docker compose up -d
@@ -146,17 +174,16 @@ jobs:
             # ── Smoke tests ──
             echo "==> Running smoke tests..."
             if bash scripts/smoke-test.sh http://localhost:3000; then
-              echo "==> Deployment successful!"
-              # Clean up failed image if it exists
-              docker rmi pulse-app:failed 2>/dev/null || true
+              echo "==> Deployment successful! (emmabyte/pulse:${DEPLOY_TAG})"
             else
               echo "==> SMOKE TESTS FAILED — ROLLING BACK"
 
-              # Check if we have a previous image to roll back to
-              if docker image inspect pulse-app:previous &>/dev/null; then
+              if [ -n "$CURRENT_IMAGE" ] && [ "$CURRENT_IMAGE" != " " ]; then
+                echo "==> Rolling back to: ${CURRENT_IMAGE}"
                 docker compose stop app
-                docker tag pulse-app:latest pulse-app:failed
-                docker tag pulse-app:previous pulse-app:latest
+
+                # Swap to previous image
+                export DOCKER_IMAGE="${CURRENT_IMAGE}"
                 docker compose up -d app
 
                 # Restore database from pre-deploy backup
