@@ -3,7 +3,7 @@ import { prismaAdapter } from '@better-auth/prisma-adapter';
 import { db } from './db';
 import { env } from '$env/dynamic/private';
 
-const ALLOWED_DOMAIN = 'emmabyte.io';
+const PLATFORM_DOMAIN = 'emmabyte.io';
 
 const socialProviders: Record<string, unknown> = {};
 if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
@@ -11,6 +11,28 @@ if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
 		clientId: env.GOOGLE_CLIENT_ID,
 		clientSecret: env.GOOGLE_CLIENT_SECRET
 	};
+}
+
+async function getOrCreatePlatformOrg() {
+	const existing = await db.organization.findUnique({ where: { slug: 'emmabyte' } });
+	if (existing) return existing;
+	return db.organization.create({
+		data: { name: 'Emmabyte', slug: 'emmabyte', plan: 'enterprise' }
+	});
+}
+
+/**
+ * Check if an email has a valid (unused, unexpired) invite token.
+ */
+async function hasValidInvite(email: string): Promise<boolean> {
+	const invite = await db.inviteToken.findFirst({
+		where: {
+			email,
+			usedAt: null,
+			expiresAt: { gt: new Date() }
+		}
+	});
+	return !!invite;
 }
 
 export const auth = betterAuth({
@@ -39,8 +61,37 @@ export const auth = betterAuth({
 			create: {
 				async before(user) {
 					const email = (user as { email?: string }).email;
-					if (!email?.endsWith(`@${ALLOWED_DOMAIN}`)) {
+					if (!email) return false;
+
+					const isPlatformStaff = email.endsWith(`@${PLATFORM_DOMAIN}`);
+					const isInvited = await hasValidInvite(email);
+
+					// Allow platform staff and invited users
+					if (!isPlatformStaff && !isInvited) {
 						return false;
+					}
+
+					return {
+						data: {
+							...user,
+							role: isPlatformStaff ? 'admin' : 'user'
+						}
+					};
+				},
+				async after(user) {
+					const typedUser = user as { id: string; email?: string };
+					if (!typedUser.email) return;
+
+					if (typedUser.email.endsWith(`@${PLATFORM_DOMAIN}`)) {
+						// Auto-join Emmabyte platform org
+						const org = await getOrCreatePlatformOrg();
+						await db.organizationMember.create({
+							data: {
+								organizationId: org.id,
+								userId: typedUser.id,
+								role: 'owner'
+							}
+						});
 					}
 				}
 			}

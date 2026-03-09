@@ -1,9 +1,13 @@
 import type { Session, User } from 'better-auth';
 
+interface PulseUser extends User {
+	role: string;
+}
+
 declare global {
 	namespace App {
 		interface Locals {
-			user: User | null;
+			user: PulseUser | null;
 			session: Session | null;
 		}
 	}
