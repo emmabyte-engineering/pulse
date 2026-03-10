@@ -150,7 +150,11 @@ jobs:
 
             # ── Pre-deploy database backup (tagged with git SHA) ──
             echo "==> Pre-deploy backup..."
-            if docker compose ps db --status running -q 2>/dev/null | grep -q .; then
+            if ! command -v aws &>/dev/null; then
+              echo "    aws CLI not installed, skipping R2 backup"
+            elif [ -z "$R2_BUCKET" ] || [ -z "$R2_ENDPOINT" ]; then
+              echo "    R2 not configured, skipping backup"
+            elif docker compose ps db --status running -q 2>/dev/null | grep -q .; then
               export GIT_SHA="${DEPLOY_TAG}"
               bash scripts/backup.sh "pre-deploy-${DEPLOY_TAG}"
             else
@@ -186,23 +190,27 @@ jobs:
                 export DOCKER_IMAGE="${CURRENT_IMAGE}"
                 docker compose up -d app
 
-                # Restore database from pre-deploy backup
-                echo "==> Restoring pre-deploy database backup..."
-                LATEST_BACKUP=$(aws s3 ls "s3://${R2_BUCKET}/backups/" \
-                  --endpoint-url "${R2_ENDPOINT}" \
-                  | grep "pre-deploy" \
-                  | sort -r \
-                  | head -1 \
-                  | awk '{print $4}')
+                # Restore database from pre-deploy backup (if R2 is configured)
+                if command -v aws &>/dev/null && [ -n "$R2_BUCKET" ]; then
+                  echo "==> Restoring pre-deploy database backup..."
+                  LATEST_BACKUP=$(aws s3 ls "s3://${R2_BUCKET}/backups/" \
+                    --endpoint-url "${R2_ENDPOINT}" \
+                    | grep "pre-deploy" \
+                    | sort -r \
+                    | head -1 \
+                    | awk '{print $4}')
 
-                if [ -n "$LATEST_BACKUP" ]; then
-                  TMPFILE="/tmp/pulse-rollback.sql.gz"
-                  aws s3 cp "s3://${R2_BUCKET}/backups/${LATEST_BACKUP}" "$TMPFILE" \
-                    --endpoint-url "${R2_ENDPOINT}" --no-progress
-                  gunzip -c "$TMPFILE" | docker compose exec -T db psql \
-                    -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" --quiet --single-transaction
-                  rm -f "$TMPFILE"
-                  echo "==> Database restored from: ${LATEST_BACKUP}"
+                  if [ -n "$LATEST_BACKUP" ]; then
+                    TMPFILE="/tmp/pulse-rollback.sql.gz"
+                    aws s3 cp "s3://${R2_BUCKET}/backups/${LATEST_BACKUP}" "$TMPFILE" \
+                      --endpoint-url "${R2_ENDPOINT}" --no-progress
+                    gunzip -c "$TMPFILE" | docker compose exec -T db psql \
+                      -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" --quiet --single-transaction
+                    rm -f "$TMPFILE"
+                    echo "==> Database restored from: ${LATEST_BACKUP}"
+                  fi
+                else
+                  echo "    R2 not available, skipping DB restore"
                 fi
 
                 sleep 10
