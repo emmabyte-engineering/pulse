@@ -58,8 +58,14 @@ check "Login page" "${BASE_URL}/login"
 # Admin guard (should redirect to login)
 check "Admin redirect" "${BASE_URL}/admin" "302"
 
-# Ingest endpoint (should require auth)
-check "Ingest auth guard" "${BASE_URL}/api/ingest" "401"
+# Ingest endpoint (POST-only, should require auth)
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 -X POST "${BASE_URL}/api/ingest" 2>/dev/null || echo "000")
+if [ "$STATUS" = "401" ] || [ "$STATUS" = "403" ]; then
+  echo "  PASS  Ingest auth guard (${STATUS})"
+else
+  echo "  FAIL  Ingest auth guard — expected 401/403, got ${STATUS}"
+  FAILED=1
+fi
 
 # Invalid invite token
 check "Invalid invite" "${BASE_URL}/signup/invalid-token" "404"
