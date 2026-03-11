@@ -54,7 +54,11 @@
 	}
 </script>
 
-<div class="relative flex min-h-screen items-center justify-center overflow-hidden">
+<svelte:head>
+	<title>Create your account — Pulse</title>
+</svelte:head>
+
+<main class="relative flex min-h-screen items-center justify-center overflow-hidden">
 	<!-- Background -->
 	<div class="pointer-events-none absolute inset-0">
 		<div
@@ -153,7 +157,7 @@
 			<a href="/login" class="text-foreground hover:underline">Sign in</a>
 		</p>
 	</div>
-</div>
+</main>
 
 <style>
 	@keyframes drift {

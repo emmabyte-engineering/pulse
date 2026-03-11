@@ -8,10 +8,16 @@
 	let loading = $state(false);
 
 	async function handleGoogleLogin() {
-		await authClient.signIn.social({
+		const result = await authClient.signIn.social({
 			provider: 'google',
-			callbackURL: '/admin'
+			callbackURL: '/admin',
+			errorCallbackURL: '/login'
 		});
+
+		if (result.error) {
+			error = result.error.message ?? 'Google login failed';
+			return;
+		}
 	}
 
 	async function handleLogin() {
@@ -33,7 +39,11 @@
 	}
 </script>
 
-<div class="flex min-h-screen items-center justify-center">
+<svelte:head>
+	<title>Sign in — Pulse</title>
+</svelte:head>
+
+<main class="flex min-h-screen items-center justify-center">
 	<div class="w-full max-w-sm space-y-6">
 		<div class="text-center">
 			<h1 class="text-2xl font-semibold">Sign in to Pulse</h1>
@@ -113,4 +123,4 @@
 			</button>
 		</form>
 	</div>
-</div>
+</main>
