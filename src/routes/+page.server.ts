@@ -1,8 +1,13 @@
 import type { PageServerLoad, Actions } from './$types';
 import { db } from '$server/db';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ locals }) => {
+	// Authenticated users should go straight to the dashboard
+	if (locals.user) {
+		throw redirect(302, '/admin');
+	}
+
 	const waitlistCount = await db.waitlistEntry.count();
 	return { waitlistCount };
 };

@@ -57,3 +57,59 @@
 		@apply bg-background text-foreground;
 	}
 }
+
+/* Accessibility preferences */
+
+/* Reduced motion — disable all animations and transitions */
+.a11y-reduced-motion,
+.a11y-reduced-motion * {
+	animation-duration: 0.001ms !important;
+	animation-iteration-count: 1 !important;
+	transition-duration: 0.001ms !important;
+	scroll-behavior: auto !important;
+}
+
+/* High contrast — boost text contrast and border visibility */
+.a11y-high-contrast {
+	--muted-foreground: 0 0% 25%;
+	--border: 0 0% 30%;
+	--input: 0 0% 30%;
+}
+.a11y-high-contrast.dark {
+	--muted-foreground: 0 0% 80%;
+	--border: 0 0% 60%;
+	--input: 0 0% 60%;
+}
+
+/* Dyslexia-friendly font — OpenDyslexic */
+@font-face {
+	font-family: 'OpenDyslexic';
+	src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/woff/OpenDyslexic-Regular.woff') format('woff');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'OpenDyslexic';
+	src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/woff/OpenDyslexic-Bold.woff') format('woff');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+.a11y-dyslexia-font,
+.a11y-dyslexia-font * {
+	font-family: 'OpenDyslexic', sans-serif !important;
+}
+
+/* Large spacing — increase letter and line spacing */
+.a11y-large-spacing {
+	letter-spacing: 0.05em;
+	word-spacing: 0.1em;
+	line-height: 1.8;
+}
+.a11y-large-spacing p,
+.a11y-large-spacing li,
+.a11y-large-spacing span,
+.a11y-large-spacing td {
+	line-height: 2;
+}

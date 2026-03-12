@@ -9,7 +9,7 @@ test('health endpoint returns ok', async ({ request }) => {
 
 test('homepage loads', async ({ page }) => {
 	await page.goto('/');
-	await expect(page.getByText('Pulse')).toBeVisible();
+	await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
 
 test('unauthenticated users are redirected from admin', async ({ page }) => {
