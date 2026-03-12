@@ -16,9 +16,16 @@ if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
 async function getOrCreatePlatformOrg() {
 	const existing = await db.organization.findUnique({ where: { slug: 'emmabyte' } });
 	if (existing) return existing;
-	return db.organization.create({
-		data: { name: 'Emmabyte', slug: 'emmabyte', plan: 'enterprise' }
-	});
+	try {
+		return await db.organization.create({
+			data: { name: 'Emmabyte', slug: 'emmabyte', plan: 'enterprise' }
+		});
+	} catch {
+		// Handle race condition: another request may have created it concurrently
+		const org = await db.organization.findUnique({ where: { slug: 'emmabyte' } });
+		if (org) return org;
+		throw new Error('Failed to get or create platform organization');
+	}
 }
 
 /**
@@ -37,12 +44,24 @@ async function hasValidInvite(email: string): Promise<boolean> {
 
 export const auth = betterAuth({
 	baseURL: env.BETTER_AUTH_URL ?? 'http://localhost:5173',
+	trustedOrigins: env.BETTER_AUTH_TRUSTED_ORIGINS
+		? env.BETTER_AUTH_TRUSTED_ORIGINS.split(',').map((o) => o.trim())
+		: [],
 	database: prismaAdapter(db, {
 		provider: 'postgresql'
 	}),
 	secret: env.BETTER_AUTH_SECRET,
 	emailAndPassword: {
 		enabled: true
+	},
+	user: {
+		additionalFields: {
+			role: {
+				type: 'string',
+				defaultValue: 'user',
+				input: false
+			}
+		}
 	},
 	socialProviders,
 	session: {

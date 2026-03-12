@@ -74,6 +74,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://pulse:pulse@localhost:5432/pulse?schema=public
       BETTER_AUTH_SECRET: ci-test-secret
+      BETTER_AUTH_TRUSTED_ORIGINS: http://localhost:4173
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
