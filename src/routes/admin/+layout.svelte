@@ -3,7 +3,6 @@
 	import { page } from '$app/state';
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
-	import { ModeWatcher } from 'mode-watcher';
 	import ThemeToggle from '$components/ThemeToggle.svelte';
 	import type { Snippet } from 'svelte';
 	import {
@@ -44,8 +43,6 @@
 		goto('/login');
 	}
 </script>
-
-<ModeWatcher />
 
 <div class="flex min-h-screen">
 	<!-- Sidebar -->

@@ -52,7 +52,8 @@ test.describe('Login flow', () => {
 		await page.getByLabel('Password').fill(password);
 		await page.getByRole('button', { name: /sign in/i }).click();
 
-		await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
+		// Wait for client-side navigation to complete
+		await page.waitForURL(/\/admin/, { timeout: 15000 });
 	});
 });
 

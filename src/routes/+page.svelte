@@ -116,7 +116,7 @@
 
 	<main>
 	<!-- Hero -->
-	<section class="relative overflow-x-hidden">
+	<section class="relative overflow-x-clip">
 		<!-- Background gradient blobs -->
 		<div class="pointer-events-none absolute inset-0">
 			<div

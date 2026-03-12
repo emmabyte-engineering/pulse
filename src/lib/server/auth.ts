@@ -66,8 +66,7 @@ export const auth = betterAuth({
 	socialProviders,
 	session: {
 		cookieCache: {
-			enabled: true,
-			maxAge: 5 * 60 // 5 minutes
+			enabled: false
 		}
 	},
 	account: {
