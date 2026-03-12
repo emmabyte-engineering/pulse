@@ -3,8 +3,8 @@ import { db } from '$server/db';
 import { fail, redirect } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	// Authenticated users should go straight to the dashboard
-	if (locals.user) {
+	// Admin users should go straight to the dashboard
+	if (locals.user?.role === 'admin') {
 		throw redirect(302, '/admin');
 	}
 
