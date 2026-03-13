@@ -1,0 +1,50 @@
+---
+title: Vercel Integration
+---
+
+# Vercel Integration
+
+Capture deployment events, build logs, and serverless function output from Vercel via log drains.
+
+## How It Works
+
+Vercel log drains stream runtime logs and deployment events to Pulse in real time. Pulse verifies the drain's verification token and ingests each log entry.
+
+## Setup
+
+1. Go to your **Vercel project** → **Settings** → **Log Drains**.
+2. Add a new log drain with this endpoint:
+
+```
+https://pulse.emmabyte.io/api/webhooks/vercel
+```
+
+3. Copy the **Verification Token** that Vercel provides.
+4. In Pulse, go to [Add Integration](/admin/integrations/add/vercel) and paste the verification token.
+
+## Verification
+
+Vercel sends a `GET` request to the endpoint with a verification challenge when the log drain is first configured. Pulse responds automatically to complete the handshake.
+
+Subsequent `POST` requests include the verification token in the `x-vercel-verify` header, which Pulse validates on every request.
+
+## Tracked Events
+
+| Log Type         | Pulse Event Type       | Severity |
+| ---------------- | ---------------------- | -------- |
+| `stdout`         | `log.stdout`           | INFO     |
+| `stderr`         | `log.stderr`           | WARN     |
+| `error`          | `log.error`            | ERROR    |
+| `deployment`     | `deploy.completed`     | INFO     |
+
+## Event Data
+
+Each Vercel log entry is stored with:
+
+- **Summary** — The log message content.
+- **Metadata** — Full log drain payload including project name, deployment ID, region, and timestamps.
+- **Severity** — Mapped from Vercel's log level.
+
+## No API Key Required
+
+This integration uses Vercel's log drain verification instead of API keys.

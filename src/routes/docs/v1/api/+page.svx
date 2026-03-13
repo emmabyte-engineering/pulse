@@ -1,0 +1,131 @@
+---
+title: API Reference
+---
+
+# API Reference
+
+All API requests use the base URL:
+
+```
+https://pulse.emmabyte.io/api/v1/{org-slug}
+```
+
+Replace `{org-slug}` with your organization's slug (visible in the admin dashboard).
+
+## Authentication
+
+Include your API key in the `Authorization` header:
+
+```
+Authorization: Bearer pk_XXXXXXXXXXXX.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+See [API Keys](/docs/v1/api/keys) for details on key formats and permissions.
+
+## Endpoints
+
+### Ingest a Single Event
+
+```
+POST /api/v1/{org-slug}/ingest
+```
+
+**Request body:**
+
+```json
+{
+  "source": "APP",
+  "eventType": "user.signup",
+  "severity": "INFO",
+  "summary": "New user signed up",
+  "userId": "usr_abc123",
+  "emailAddress": "user@example.com",
+  "metadata": {
+    "plan": "pro",
+    "referrer": "twitter"
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "ok": true,
+  "id": "clxyz123abc"
+}
+```
+
+### Ingest a Batch of Events
+
+```
+POST /api/v1/{org-slug}/ingest
+```
+
+**Request body:**
+
+```json
+{
+  "events": [
+    {
+      "source": "APP",
+      "eventType": "email.sent",
+      "severity": "INFO",
+      "summary": "Welcome email sent",
+      "emailAddress": "user@example.com"
+    },
+    {
+      "source": "APP",
+      "eventType": "email.delivered",
+      "severity": "INFO",
+      "summary": "Welcome email delivered",
+      "emailAddress": "user@example.com"
+    }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "ok": true,
+  "count": 2
+}
+```
+
+## Event Fields
+
+| Field          | Type     | Required | Description                                    |
+| -------------- | -------- | -------- | ---------------------------------------------- |
+| `source`       | string   | Yes      | `APP`, `MAILERSEND`, `VERCEL`, `PLANETSCALE`   |
+| `eventType`    | string   | Yes      | Dot-notation type (e.g., `user.signup`)        |
+| `severity`     | string   | No       | `DEBUG`, `INFO`, `WARN`, `ERROR`, `CRITICAL`   |
+| `summary`      | string   | No       | Human-readable description                     |
+| `userId`       | string   | No       | Associated user ID                             |
+| `emailAddress` | string   | No       | Associated email address                       |
+| `metadata`     | object   | No       | Arbitrary JSON metadata                        |
+| `externalId`   | string   | No       | External ID for deduplication                  |
+| `retainUntil`  | datetime | No       | ISO 8601 retention date                        |
+
+## Rate Limits
+
+Each API key is limited to **100 requests per minute**. Exceeding this limit returns a `429` status code.
+
+## Error Responses
+
+All errors return a JSON body:
+
+```json
+{
+  "message": "Invalid or expired API key"
+}
+```
+
+| Status | Meaning                        |
+| ------ | ------------------------------ |
+| 400    | Invalid event payload          |
+| 401    | Missing API key                |
+| 403    | Invalid key or wrong org       |
+| 404    | Organization not found         |
+| 429    | Rate limit exceeded            |

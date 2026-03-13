@@ -1,0 +1,102 @@
+---
+title: Website Integration
+---
+
+# Website Integration
+
+Send application events, errors, and user activity from your SvelteKit (or any) application to Pulse.
+
+## Setup
+
+1. Create an API key from the [API Keys](/admin/api-keys) page.
+2. Store the key in your application's environment variables.
+3. Send events to your org-scoped endpoint.
+
+## Endpoint
+
+```
+POST https://pulse.emmabyte.io/api/v1/{org-slug}/ingest
+```
+
+## Example: SvelteKit Server Hook
+
+Track authentication events from your `hooks.server.ts`:
+
+```typescript
+const PULSE_API_KEY = env.PULSE_API_KEY;
+const PULSE_ENDPOINT = 'https://pulse.emmabyte.io/api/v1/emmabyte/ingest';
+
+async function trackEvent(event: {
+  source: string;
+  eventType: string;
+  severity?: string;
+  summary?: string;
+  userId?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  await fetch(PULSE_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${PULSE_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ source: 'APP', ...event })
+  });
+}
+```
+
+## Recommended Event Types
+
+Use dot-notation to organize your events:
+
+| Event Type          | Severity | Description                  |
+| ------------------- | -------- | ---------------------------- |
+| `auth.login`        | INFO     | User logged in               |
+| `auth.logout`       | INFO     | User logged out              |
+| `auth.failed`       | WARN     | Failed login attempt         |
+| `user.signup`       | INFO     | New user created             |
+| `email.sent`        | INFO     | Transactional email sent     |
+| `email.failed`      | ERROR    | Email delivery failed        |
+| `order.created`     | INFO     | New order placed             |
+| `error.unhandled`   | ERROR    | Unhandled server error       |
+| `deploy.completed`  | INFO     | Deployment finished          |
+
+## Batch Ingestion
+
+For high-throughput scenarios, batch events into a single request:
+
+```typescript
+await fetch(PULSE_ENDPOINT, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${PULSE_API_KEY}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    events: [
+      { source: 'APP', eventType: 'email.sent', summary: 'Welcome email' },
+      { source: 'APP', eventType: 'user.signup', summary: 'New user' }
+    ]
+  })
+});
+```
+
+## Metadata
+
+Include structured metadata for richer event context:
+
+```json
+{
+  "source": "APP",
+  "eventType": "order.created",
+  "severity": "INFO",
+  "summary": "New order #1234",
+  "userId": "usr_abc",
+  "metadata": {
+    "orderId": "ord_1234",
+    "total": 49.99,
+    "items": 3,
+    "currency": "USD"
+  }
+}
+```

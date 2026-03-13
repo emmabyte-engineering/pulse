@@ -1,0 +1,54 @@
+---
+title: MailerSend Integration
+---
+
+# MailerSend Integration
+
+Track email delivery, bounces, opens, clicks, and other engagement events from MailerSend.
+
+## How It Works
+
+MailerSend sends webhook events to Pulse whenever an email event occurs. Pulse verifies the webhook signature and ingests the event automatically.
+
+## Setup
+
+1. Go to **MailerSend** → **Domains** → select your domain → **Webhooks**.
+2. Add a new webhook with this endpoint:
+
+```
+https://pulse.emmabyte.io/api/webhooks/mailersend
+```
+
+3. Select the events you want to track (delivery, bounce, open, click, etc.).
+4. Copy the **Signing Secret** from MailerSend.
+5. In Pulse, go to [Add Integration](/admin/integrations/add/mailersend) and paste the signing secret.
+
+## Tracked Events
+
+| MailerSend Event       | Pulse Event Type             | Severity |
+| ---------------------- | ---------------------------- | -------- |
+| `activity.sent`        | `email.sent`                 | INFO     |
+| `activity.delivered`   | `email.delivered`            | INFO     |
+| `activity.opened`      | `email.opened`               | INFO     |
+| `activity.clicked`     | `email.clicked`              | INFO     |
+| `activity.soft_bounced`| `email.soft_bounced`         | WARN     |
+| `activity.hard_bounced`| `email.hard_bounced`         | ERROR    |
+| `activity.spam_complaint` | `email.spam_complaint`    | ERROR    |
+| `activity.unsubscribed`| `email.unsubscribed`         | INFO     |
+
+## Signature Verification
+
+Pulse verifies every incoming webhook using the HMAC-SHA256 signature in the `Signature` header. Requests with invalid or missing signatures are rejected with a `401` response.
+
+## Event Data
+
+Each MailerSend event is stored with:
+
+- **Email address** — The recipient's email.
+- **Summary** — A human-readable description of the event.
+- **Metadata** — The full MailerSend webhook payload for detailed inspection.
+- **External ID** — The MailerSend message ID for deduplication.
+
+## No API Key Required
+
+This integration uses webhook signature verification instead of API keys. Events are ingested directly from MailerSend's servers.

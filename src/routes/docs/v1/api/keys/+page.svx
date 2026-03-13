@@ -1,0 +1,67 @@
+---
+title: API Keys
+---
+
+# API Keys
+
+API keys authenticate requests to the Pulse ingest API. Each key is scoped to an organization and carries a set of permissions.
+
+## Key Format
+
+Pulse uses structured API keys:
+
+```
+pk_<keyId>.<secret>
+```
+
+- **`keyId`** — A 12-character base64url identifier used for fast lookups.
+- **`secret`** — A 32-byte hex string used for cryptographic verification.
+- **Display prefix** — Keys are shown as `pk_XXXXXXXXXXXX...` in the dashboard.
+
+The full key is only displayed once at creation time. Store it securely.
+
+## Legacy Keys
+
+Older keys use the format `pk_<hex>` without the dot separator. These continue to work via hash-based lookup but cannot be looked up by key ID.
+
+## Permissions
+
+Each key has one or more permission scopes:
+
+| Permission    | Description                              |
+| ------------- | ---------------------------------------- |
+| `ingest`      | Send events to the ingestion API         |
+| `ingest:read` | Query events and metrics                 |
+| `admin`       | Full access including key management     |
+
+Keys default to `ingest` only. The `admin` permission includes all other permissions implicitly.
+
+## Expiration
+
+Keys can be created with an expiration:
+
+- **30 days** — Short-lived keys for temporary integrations.
+- **90 days** — Standard rotation interval.
+- **1 year** — Long-lived keys for stable integrations.
+- **Never** — No expiration (use with caution).
+
+Expired keys are rejected at validation time and return a `403` error.
+
+## Creating Keys
+
+Create keys from the [API Keys](/admin/api-keys) page in the admin dashboard. You can also manage keys programmatically with the `admin` permission (coming soon).
+
+## Usage
+
+Include the key in the `Authorization` header:
+
+```bash
+curl -X POST https://pulse.emmabyte.io/api/v1/emmabyte/ingest \
+  -H "Authorization: Bearer pk_XXXXXXXXXXXX.XXXXXXXX..." \
+  -H "Content-Type: application/json" \
+  -d '{"source": "APP", "eventType": "test.ping", "severity": "INFO"}'
+```
+
+## Revoking Keys
+
+Revoke a key from the API Keys page by clicking the menu on any key card and selecting **Revoke Key**. Revocation is immediate — any in-flight requests using the key will fail.

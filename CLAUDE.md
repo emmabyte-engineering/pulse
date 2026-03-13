@@ -4,6 +4,29 @@
 
 Pulse is a standalone observability service that aggregates logs and events from MailerSend, Vercel, PlanetScale, and the Emmabyte SvelteKit application. It provides a centralized admin dashboard for querying, filtering, and alerting on events across the stack.
 
+## Repository Strategy — Open Source vs Cloud
+
+Pulse is split across two repositories:
+
+- **`emmabyte/pulse`** (this repo, public, AGPL-3.0) — Single-tenant, self-hostable version. One implicit organization, no org routing, simple API keys. Published as Docker images to GHCR and Docker Hub.
+- **`emmabyte/pulse-cloud`** (private) — Hosted multi-tenant offering. Imports/extends the core and adds: multi-tenancy (organizations, org-scoped routes), billing/subscriptions, user signup + onboarding, usage metering, and any features exclusive to the hosted product.
+
+### Feature placement rules
+
+When implementing a new feature, explicitly decide where it belongs:
+
+| Feature type | Repo | Examples |
+|---|---|---|
+| Core ingestion, webhooks, event processing | `pulse` | New webhook source, event filtering, retention policies |
+| Dashboard UI, alerting, notifications | `pulse` | Alert rules, notification channels, event browser |
+| Auth, single-user/single-org admin | `pulse` | Login, admin role checks, API key CRUD (single-tenant) |
+| Multi-tenancy, org management | `pulse-cloud` | Org CRUD, org-scoped API routes (`/api/v1/[slug]/...`), org switcher |
+| Billing, subscriptions, usage limits | `pulse-cloud` | Stripe integration, plan gating, usage metering |
+| User signup, onboarding, waitlist | `pulse-cloud` | Registration flow, invite system, onboarding wizard |
+| Public marketing pages | `pulse-cloud` | Landing page, pricing, changelog |
+
+**When in doubt:** If a feature only makes sense when multiple organizations exist, it belongs in `pulse-cloud`. If a solo self-hoster would benefit from it, it belongs here.
+
 ## Tech Stack
 
 - **Framework**: SvelteKit (Svelte 5) with adapter-node

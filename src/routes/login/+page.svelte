@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
+	import { Zap } from 'lucide-svelte';
 
 	let email = $state('');
 	let password = $state('');
@@ -46,6 +47,14 @@
 <main class="flex min-h-screen items-center justify-center">
 	<div class="w-full max-w-sm space-y-6">
 		<div class="text-center">
+			<a href="/" class="inline-flex items-center gap-2 mb-4">
+				<div
+					class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#FFBA71]/20 to-[#FF6798]/20"
+				>
+					<Zap class="h-4 w-4 text-[#b93a54]" />
+				</div>
+				<span class="text-lg font-semibold text-foreground">Pulse</span>
+			</a>
 			<h1 class="text-2xl font-semibold">Sign in to Pulse</h1>
 			<p class="mt-1 text-sm text-muted-foreground">Emmabyte Observability</p>
 		</div>
@@ -122,5 +131,9 @@
 				{loading ? 'Signing in...' : 'Sign In'}
 			</button>
 		</form>
+
+		<p class="text-center text-sm text-muted-foreground">
+			<a href="/" class="transition-colors hover:text-foreground">&larr; Back to homepage</a>
+		</p>
 	</div>
 </main>

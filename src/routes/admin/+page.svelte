@@ -5,7 +5,7 @@
 	import LineChart from '$components/LineChart.svelte';
 	import SeverityBadge from '$components/SeverityBadge.svelte';
 	import TimeRangeSelect from '$components/TimeRangeSelect.svelte';
-	import { Activity, CheckCircle, Key, Wifi, Plus, ArrowRight } from 'lucide-svelte';
+	import { Activity, CheckCircle, Key, Wifi, Plus, ArrowRight, BookOpen, ExternalLink } from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
 	const stats = $derived(data.stats);
@@ -26,22 +26,116 @@
 </script>
 
 {#if !data.hasIntegrations}
-	<!-- Empty state -->
-	<div class="flex min-h-[60vh] items-center justify-center">
-		<div class="max-w-md text-center">
+	<!-- Getting Started -->
+	<div class="space-y-8">
+		<div class="text-center">
 			<div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFBA71]/20 to-[#FF6798]/20">
 				<Activity class="h-8 w-8 text-[#FF6798]" />
 			</div>
 			<h2 class="mt-6 text-2xl font-semibold">Welcome to Pulse</h2>
 			<p class="mt-2 text-sm text-muted-foreground">
-				Connect your first service to start receiving events and monitoring your stack.
+				Get set up in a few minutes. Follow the steps below to start monitoring your stack.
+			</p>
+		</div>
+
+		<div class="mx-auto max-w-2xl space-y-4">
+			<!-- Step 1: Add Integration -->
+			<div class="rounded-2xl border border-border bg-card p-6">
+				<div class="flex items-start gap-4">
+					<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#FFBA71] to-[#FF6798] text-sm font-semibold text-white">
+						1
+					</span>
+					<div class="flex-1">
+						<h3 class="text-sm font-semibold">Connect an integration</h3>
+						<p class="mt-1 text-sm text-muted-foreground">
+							Choose a service to start receiving events from — like MailerSend for email tracking,
+							Vercel for deployment logs, or your own application via the ingest API.
+						</p>
+						<a
+							href="/admin/integrations/add"
+							class="mt-3 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#FFBA71] to-[#FF6798] px-4 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+						>
+							<Plus class="h-4 w-4" />
+							Add Your First Integration
+						</a>
+					</div>
+				</div>
+			</div>
+
+			<!-- Step 2: Create API Key -->
+			<div class="rounded-2xl border border-border bg-card p-6">
+				<div class="flex items-start gap-4">
+					<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-muted-foreground">
+						2
+					</span>
+					<div class="flex-1">
+						<h3 class="text-sm font-semibold">Create an API key</h3>
+						<p class="mt-1 text-sm text-muted-foreground">
+							If you're using the Website or PlanetScale integration, you'll need an API key
+							to authenticate requests to the ingest endpoint. Keys are shown once on creation, so copy it right away.
+						</p>
+						<a
+							href="/admin/api-keys"
+							class="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[#b93a54] transition-colors hover:text-[#e85d75]"
+						>
+							<Key class="h-3.5 w-3.5" />
+							Go to API Keys
+							<ArrowRight class="h-3.5 w-3.5" />
+						</a>
+					</div>
+				</div>
+			</div>
+
+			<!-- Step 3: Send Events -->
+			<div class="rounded-2xl border border-border bg-card p-6">
+				<div class="flex items-start gap-4">
+					<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-muted-foreground">
+						3
+					</span>
+					<div class="flex-1">
+						<h3 class="text-sm font-semibold">Start sending events</h3>
+						<p class="mt-1 text-sm text-muted-foreground">
+							Configure your webhook URL or instrument your app to send events. Define your own
+							event types using dot-notation (e.g., <code class="rounded bg-muted px-1 text-xs">email.sent</code>,
+							<code class="rounded bg-muted px-1 text-xs">auth.login</code>,
+							<code class="rounded bg-muted px-1 text-xs">order.created</code>) and
+							attach metadata to make events searchable.
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Step 4: Set Up Alerts -->
+			<div class="rounded-2xl border border-border bg-card p-6">
+				<div class="flex items-start gap-4">
+					<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-muted-foreground">
+						4
+					</span>
+					<div class="flex-1">
+						<h3 class="text-sm font-semibold">Configure alerts</h3>
+						<p class="mt-1 text-sm text-muted-foreground">
+							Set up alert rules to get notified when error rates spike, events stop flowing,
+							or specific conditions are met. Add notification channels in Settings to route
+							alerts to Slack, email, or other services.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Docs callout -->
+		<div class="mx-auto max-w-2xl rounded-2xl border border-border bg-muted/50 p-6 text-center">
+			<BookOpen class="mx-auto h-6 w-6 text-muted-foreground" />
+			<h3 class="mt-3 text-sm font-semibold">Need more details?</h3>
+			<p class="mt-1 text-sm text-muted-foreground">
+				Our docs cover the full event schema, integration guides, naming conventions, and API reference.
 			</p>
 			<a
-				href="/admin/integrations/add"
-				class="mt-6 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#FFBA71] to-[#FF6798] px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+				href="/docs/v1"
+				class="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[#b93a54] transition-colors hover:text-[#e85d75]"
 			>
-				<Plus class="h-4 w-4" />
-				Add Your First Integration
+				Read the Pulse documentation
+				<ExternalLink class="h-3.5 w-3.5" />
 			</a>
 		</div>
 	</div>

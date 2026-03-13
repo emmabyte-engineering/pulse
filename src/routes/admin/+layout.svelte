@@ -14,7 +14,8 @@
 		Mail,
 		Database,
 		Globe,
-		Plus
+		Plus,
+		BookOpen
 	} from 'lucide-svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
@@ -116,7 +117,14 @@
 
 		<!-- Bottom section -->
 		<div class="border-t border-border p-4">
-			<div class="flex items-center justify-between px-3 py-1">
+			<a
+				href="/docs/v1"
+				class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+			>
+				<BookOpen class="h-4 w-4" />
+				Documentation
+			</a>
+			<div class="mt-2 flex items-center justify-between px-3 py-1">
 				<ThemeToggle />
 			</div>
 			<div class="mt-2 flex items-center justify-between px-3">
