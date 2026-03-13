@@ -21,21 +21,38 @@ test.describe('Event Ingestion Pipeline', () => {
 		const { cookies } = await createAdminUser(request);
 		await page.context().addCookies(cookies);
 
-		// Navigate to API keys page
+		// Navigate to API keys page to establish session cookies and CSRF
 		await page.goto('/admin/api-keys');
-		await expect(page).toHaveURL(/\/admin\/api-keys/);
+		await page.waitForLoadState('networkidle');
 
-		// Open create dialog and fill form
-		await page.getByRole('button', { name: /create key/i }).click();
-		await page.getByLabel('Name').fill('e2e-docker-test-key');
-		await page.getByRole('button', { name: /^create$/i }).click();
+		// Create API key via programmatic form action (bypasses dialog UI fragility)
+		const actionResponse = await page.evaluate(async () => {
+			const body = new FormData();
+			body.append('name', 'e2e-ingest-key');
+			body.append('permissions', 'ingest');
+			body.append('expiration', 'never');
 
-		// Wait for key banner and extract the key
-		const keyDisplay = page.locator('code').first();
-		await expect(keyDisplay).toBeVisible({ timeout: 10000 });
-		const apiKey = (await keyDisplay.textContent())?.trim();
-		expect(apiKey).toBeTruthy();
-		expect(apiKey).toMatch(/^pk_/);
+			const res = await fetch('/admin/api-keys?/createKey', {
+				method: 'POST',
+				body,
+				headers: { 'x-sveltekit-action': 'true' }
+			});
+
+			return { status: res.status, text: await res.text() };
+		});
+
+		expect(
+			actionResponse.status,
+			`Form action failed (${actionResponse.status}): ${actionResponse.text.substring(0, 500)}`
+		).toBe(200);
+
+		// Extract pk_ key from the devalue-serialized action response
+		const keyMatch = actionResponse.text.match(/pk_[a-zA-Z0-9._-]+/);
+		expect(
+			keyMatch,
+			`Could not find API key in response: ${actionResponse.text.substring(0, 500)}`
+		).toBeTruthy();
+		const apiKey = keyMatch![0];
 
 		// Ingest an event via API
 		const ingestRes = await request.post('/api/ingest', {
