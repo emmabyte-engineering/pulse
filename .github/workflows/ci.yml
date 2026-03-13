@@ -148,6 +148,7 @@ jobs:
             -e BETTER_AUTH_SECRET=e2e-docker-test-secret \
             -e BETTER_AUTH_URL=http://localhost:3000 \
             -e BETTER_AUTH_TRUSTED_ORIGINS=http://localhost:3000 \
+            -e ORIGIN=http://localhost:3000 \
             -p 3000:3000 \
             pulse-e2e:latest
           echo "Waiting for app to be healthy..."
