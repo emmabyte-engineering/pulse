@@ -25,8 +25,13 @@ RUN npx svelte-kit sync
 RUN pnpm db:generate
 RUN pnpm build
 
-# Production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+# Production dependencies only — then prune packages not needed at runtime
+RUN pnpm install --frozen-lockfile --prod \
+    && rm -rf node_modules/.pnpm/@prisma+dev@* \
+    && rm -rf node_modules/.pnpm/hono@* \
+    && rm -rf node_modules/.pnpm/@hono+node-server@* \
+    && rm -rf node_modules/.pnpm/glob@10.* \
+    && rm -rf node_modules/.pnpm/minimatch@9.*
 
 # Production stage
 FROM node:22-slim AS production
