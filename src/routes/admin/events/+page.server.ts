@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { db } from '$server/db';
-import type { Prisma } from '$lib/generated/prisma/client';
+import { fromJsonField, containsInsensitive } from '$server/db-compat';
+
 
 export const load: PageServerLoad = async ({ url }) => {
 	const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
@@ -12,16 +13,17 @@ export const load: PageServerLoad = async ({ url }) => {
 	const dateFrom = url.searchParams.get('from');
 	const dateTo = url.searchParams.get('to');
 
-	const where: Prisma.EventWhereInput = {};
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const where: Record<string, any> = {};
 
 	if (source) {
-		where.source = source as Prisma.EnumEventSourceFilter;
+		where.source = source;
 	}
 	if (severity) {
-		where.severity = severity as Prisma.EnumSeverityFilter;
+		where.severity = severity;
 	}
 	if (eventType) {
-		where.eventType = { contains: eventType, mode: 'insensitive' };
+		where.eventType = containsInsensitive(eventType);
 	}
 	if (dateFrom || dateTo) {
 		where.timestamp = {};
@@ -30,9 +32,9 @@ export const load: PageServerLoad = async ({ url }) => {
 	}
 	if (search) {
 		where.OR = [
-			{ summary: { contains: search, mode: 'insensitive' } },
-			{ eventType: { contains: search, mode: 'insensitive' } },
-			{ emailAddress: { contains: search, mode: 'insensitive' } }
+			{ summary: containsInsensitive(search) },
+			{ eventType: containsInsensitive(search) },
+			{ emailAddress: containsInsensitive(search) }
 		];
 	}
 
@@ -47,7 +49,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	]);
 
 	return {
-		events,
+		events: events.map((e) => ({ ...e, metadata: fromJsonField(e.metadata) })),
 		pagination: {
 			page,
 			perPage,

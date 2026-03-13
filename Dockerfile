@@ -14,7 +14,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Prisma 7 config requires DATABASE_URL; better-auth requires its secret at build time
-ARG DATABASE_URL=postgresql://build:build@localhost:5432/build
+ARG DATABASE_URL=file:./data/pulse.db
 ARG BETTER_AUTH_SECRET=build-time-placeholder
 ARG BETTER_AUTH_URL=http://localhost:3000
 ENV DATABASE_URL=$DATABASE_URL
@@ -53,10 +53,15 @@ COPY --from=builder --chown=pulse:pulse /app/src/lib/generated ./src/lib/generat
 COPY --chown=pulse:pulse docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
+RUN mkdir -p /app/data && chown pulse:pulse /app/data
+
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV DATABASE_URL=file:/app/data/pulse.db
 ENV DB_HOST=db
 ENV DB_PORT=5432
+
+VOLUME /app/data
 
 EXPOSE 3000
 

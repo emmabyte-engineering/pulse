@@ -1,5 +1,5 @@
 import { db } from './db';
-import type { EventSource } from '../generated/prisma/client';
+import type { EventSource } from './db-types';
 
 const SOURCES: EventSource[] = ['MAILERSEND', 'VERCEL', 'PLANETSCALE', 'APP'];
 

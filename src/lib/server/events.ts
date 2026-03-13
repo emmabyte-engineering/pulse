@@ -1,5 +1,6 @@
 import { db } from './db';
-import type { EventSource, Severity, Prisma } from '../generated/prisma/client';
+import { toJsonField } from './db-compat';
+import type { EventSource, Severity } from './db-types';
 
 interface IngestEventParams {
 	source: EventSource;
@@ -9,7 +10,7 @@ interface IngestEventParams {
 	organizationId?: string;
 	emailAddress?: string;
 	summary?: string;
-	metadata?: Prisma.InputJsonValue;
+	metadata?: Record<string, unknown> | unknown;
 	externalId?: string;
 	retainUntil?: Date;
 }
@@ -28,7 +29,7 @@ export async function ingestEvent(params: IngestEventParams) {
 			organizationId: params.organizationId,
 			emailAddress: params.emailAddress,
 			summary: params.summary,
-			metadata: params.metadata ?? undefined,
+			metadata: toJsonField(params.metadata) as string,
 			externalId: params.externalId,
 			retainUntil: params.retainUntil
 		}
@@ -49,7 +50,7 @@ export async function ingestBatch(events: IngestEventParams[]) {
 			organizationId: e.organizationId,
 			emailAddress: e.emailAddress,
 			summary: e.summary,
-			metadata: e.metadata ?? undefined,
+			metadata: toJsonField(e.metadata) as string,
 			externalId: e.externalId,
 			retainUntil: e.retainUntil
 		}))

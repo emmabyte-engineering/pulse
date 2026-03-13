@@ -1,5 +1,6 @@
 import { db } from '$server/db';
-import type { EventSource, Severity } from '../../generated/prisma/client';
+import { toJsonField } from '$server/db-compat';
+import type { EventSource, Severity } from '../db-types';
 
 interface VercelLogEntry {
 	id?: string;
@@ -30,7 +31,7 @@ export async function processVercelLogDrain(entries: VercelLogEntry[]) {
 		timestamp: new Date(entry.timestamp),
 		externalId: entry.id,
 		summary: entry.message.slice(0, 500),
-		metadata: entry as object,
+		metadata: toJsonField(entry) as string,
 		retainUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 days
 	}));
 

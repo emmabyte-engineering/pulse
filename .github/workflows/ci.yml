@@ -96,9 +96,112 @@ jobs:
           name: playwright-report
           path: playwright-report/
 
+  e2e-docker:
+    runs-on: ubuntu-latest
+    needs: [check]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - db: sqlite
+            build-arg: DATABASE_URL=file:./data/pulse.db
+          - db: postgresql
+            build-arg: DATABASE_URL=postgresql://build:build@localhost:5432/build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: pulse-e2e:latest
+          build-args: ${{ matrix.build-arg }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start services (PostgreSQL)
+        if: matrix.db == 'postgresql'
+        run: |
+          docker compose -f docker-compose.e2e.yml up -d
+          echo "Waiting for app to be healthy..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "App is healthy!"
+              break
+            fi
+            if [ "$i" = "30" ]; then
+              echo "App failed to become healthy"
+              docker compose -f docker-compose.e2e.yml logs app
+              exit 1
+            fi
+            sleep 2
+          done
+
+      - name: Start services (SQLite)
+        if: matrix.db == 'sqlite'
+        run: |
+          docker run -d --name pulse-e2e \
+            -e BETTER_AUTH_SECRET=e2e-docker-test-secret \
+            -e BETTER_AUTH_URL=http://localhost:3000 \
+            -e BETTER_AUTH_TRUSTED_ORIGINS=http://localhost:3000 \
+            -p 3000:3000 \
+            pulse-e2e:latest
+          echo "Waiting for app to be healthy..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "App is healthy!"
+              break
+            fi
+            if [ "$i" = "30" ]; then
+              echo "App failed to become healthy"
+              docker logs pulse-e2e
+              exit 1
+            fi
+            sleep 2
+          done
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: npx playwright install --with-deps chromium
+
+      - name: Run Docker e2e tests
+        run: pnpm test:e2e-docker
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: docker-e2e-report-${{ matrix.db }}
+          path: playwright-report/
+
+      - name: Show container logs on failure
+        if: failure()
+        run: |
+          if [ "${{ matrix.db }}" = "postgresql" ]; then
+            docker compose -f docker-compose.e2e.yml logs app
+          else
+            docker logs pulse-e2e
+          fi
+
+      - name: Cleanup
+        if: always()
+        run: |
+          if [ "${{ matrix.db }}" = "postgresql" ]; then
+            docker compose -f docker-compose.e2e.yml down -v
+          else
+            docker rm -f pulse-e2e 2>/dev/null || true
+          fi
+
   docker:
     runs-on: ubuntu-latest
-    needs: [check, test, e2e]
+    needs: [check, test, e2e, e2e-docker]
     if: github.event_name == 'push'
     permissions:
       contents: read
