@@ -21,38 +21,31 @@ test.describe('Event Ingestion Pipeline', () => {
 		const { cookies } = await createAdminUser(request);
 		await page.context().addCookies(cookies);
 
-		// Navigate to API keys page to establish session cookies and CSRF
+		// Navigate to API keys page
 		await page.goto('/admin/api-keys');
 		await page.waitForLoadState('networkidle');
 
-		// Create API key via programmatic form action (bypasses dialog UI fragility)
-		const actionResponse = await page.evaluate(async () => {
-			const body = new FormData();
-			body.append('name', 'e2e-ingest-key');
-			body.append('permissions', 'ingest');
-			body.append('expiration', 'never');
+		// Open the create key dialog
+		await page.getByRole('button', { name: /create key/i }).click();
 
-			const res = await fetch('/admin/api-keys?/createKey', {
-				method: 'POST',
-				body,
-				headers: { 'x-sveltekit-action': 'true' }
-			});
+		// Fill the form inside the dialog
+		const nameInput = page.getByLabel('Name');
+		await expect(nameInput).toBeVisible({ timeout: 5000 });
+		await nameInput.fill('e2e-ingest-key');
 
-			return { status: res.status, text: await res.text() };
-		});
+		// Submit the form and wait for the action response
+		const [response] = await Promise.all([
+			page.waitForResponse((res) => res.url().includes('/admin/api-keys') && res.request().method() === 'POST'),
+			page.locator('button[type="submit"]').click()
+		]);
+		expect(response.status(), `Form action returned ${response.status()}`).toBe(200);
 
-		expect(
-			actionResponse.status,
-			`Form action failed (${actionResponse.status}): ${actionResponse.text.substring(0, 500)}`
-		).toBe(200);
-
-		// Extract pk_ key from the devalue-serialized action response
-		const keyMatch = actionResponse.text.match(/pk_[a-zA-Z0-9._-]+/);
-		expect(
-			keyMatch,
-			`Could not find API key in response: ${actionResponse.text.substring(0, 500)}`
-		).toBeTruthy();
-		const apiKey = keyMatch![0];
+		// Wait for the key banner to appear after dialog closes
+		const keyCode = page.locator('code');
+		await expect(keyCode).toBeVisible({ timeout: 15000 });
+		const apiKey = (await keyCode.textContent())?.trim();
+		expect(apiKey, 'API key should be present in code element').toBeTruthy();
+		expect(apiKey, `Expected pk_ prefix but got: ${apiKey}`).toMatch(/^pk_/);
 
 		// Ingest an event via API
 		const ingestRes = await request.post('/api/ingest', {
