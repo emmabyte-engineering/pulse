@@ -27,11 +27,6 @@ else
   mkdir -p /app/data
 fi
 
-# Regenerate Prisma client for the actual DATABASE_URL provider
-# (build-time generation may have used a different provider)
-echo "Generating Prisma client..."
-node_modules/.bin/prisma generate
-
 # Run database migrations
 echo "Running database migrations..."
 node_modules/.bin/prisma migrate deploy
