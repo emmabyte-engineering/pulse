@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from '@better-auth/prisma-adapter';
 import { db } from './db';
+import { isPostgres } from './db-provider';
 import { env } from '$env/dynamic/private';
 
 const PLATFORM_DOMAIN = 'emmabyte.io';
@@ -48,7 +49,7 @@ export const auth = betterAuth({
 		? env.BETTER_AUTH_TRUSTED_ORIGINS.split(',').map((o) => o.trim())
 		: [],
 	database: prismaAdapter(db, {
-		provider: 'postgresql'
+		provider: isPostgres() ? 'postgresql' : 'sqlite'
 	}),
 	secret: env.BETTER_AUTH_SECRET,
 	emailAndPassword: {

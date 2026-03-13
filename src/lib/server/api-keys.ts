@@ -1,4 +1,5 @@
 import { db } from './db';
+import { serializePermissions, deserializePermissions } from './db-compat';
 import crypto from 'node:crypto';
 
 function hashKey(key: string): string {
@@ -40,7 +41,7 @@ export async function createApiKey({
 			keyId,
 			keyHash: hash,
 			prefix,
-			permissions,
+			permissions: serializePermissions(permissions) as string & string[],
 			expiresAt: expiresAt ?? null,
 			createdById
 		}
@@ -86,7 +87,7 @@ export async function validateApiKey(key: string): Promise<ValidatedApiKey | nul
 	return {
 		id: apiKey.id,
 		keyId: apiKey.keyId,
-		permissions: apiKey.permissions
+		permissions: deserializePermissions(apiKey.permissions as string[] | string)
 	};
 }
 
@@ -95,10 +96,14 @@ export function hasPermission(validated: ValidatedApiKey, scope: string): boolea
 }
 
 export async function listApiKeys() {
-	return db.apiKey.findMany({
+	const keys = await db.apiKey.findMany({
 		orderBy: { createdAt: 'desc' },
 		include: { createdBy: { select: { name: true, email: true } } }
 	});
+	return keys.map((k) => ({
+		...k,
+		permissions: deserializePermissions(k.permissions as string[] | string)
+	}));
 }
 
 export async function deleteApiKey(id: string) {

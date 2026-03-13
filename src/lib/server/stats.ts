@@ -1,5 +1,5 @@
 import { db } from './db';
-import type { EventSource } from '$lib/generated/prisma/client';
+import type { EventSource } from './db-types';
 
 interface TimeSeriesPoint {
 	label: string;

@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─── Better Auth Tables ─────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          String    @default("user")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  accounts      Account[]
+  apiKeys       ApiKey[]
+  organizations OrganizationMember[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
+
+// ─── Observability Tables ───────────────────────────────────────────────────
+
+model Event {
+  id             String   @id @default(cuid())
+  source         String
+  eventType      String
+  severity       String   @default("INFO")
+  timestamp      DateTime @default(now())
+
+  // Context
+  userId         String?
+  organizationId String?
+  emailAddress   String?
+
+  // Payload
+  summary        String?
+  metadata       String?
+
+  // Deduplication
+  externalId     String?
+
+  // Retention
+  retainUntil    DateTime?
+
+  createdAt      DateTime @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([source, eventType])
+  @@index([timestamp])
+  @@index([emailAddress])
+  @@index([severity])
+  @@index([userId])
+  @@index([externalId])
+  @@index([organizationId])
+  @@map("event")
+}
+
+model Metric {
+  id          String   @id @default(cuid())
+  metricName  String
+  source      String
+  periodStart DateTime
+  periodEnd   DateTime
+  value       Float
+  metadata    String?
+
+  @@index([metricName, periodStart])
+  @@index([source, periodStart])
+  @@map("metric")
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  keyId       String?   @unique
+  keyHash     String    @unique
+  prefix      String    // Display prefix (e.g., "pk_a1b2c3d4e5f6...")
+  permissions String    @default("ingest")
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@map("api_key")
+}
+
+model AlertRule {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  source           String
+  eventType        String?
+  conditionType    String   // THRESHOLD, RATE, OCCURRENCE
+  conditionValue   Float
+  windowMinutes    Int      @default(60)
+  enabled          Boolean  @default(true)
+  notifyEmail      String?
+  notifySlack      String?
+  lastTriggeredAt  DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("alert_rule")
+}
+
+model Setting {
+  key       String   @id
+  value     String   // AES-256-GCM encrypted for secrets
+  secret    Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@map("setting")
+}
+
+model Integration {
+  id          String   @id @default(cuid())
+  source      String   @unique
+  name        String
+  enabled     Boolean  @default(true)
+  config      String   @default("{}") // AES-256-GCM encrypted JSON
+  connectedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("integration")
+}
+
+model NotificationChannel {
+  id        String   @id @default(cuid())
+  type      String   // mailersend, smtp, slack, clickup
+  name      String
+  enabled   Boolean  @default(true)
+  config    String   // AES-256-GCM encrypted JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_channel")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  plan      String   @default("free") // free, pro, enterprise
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members OrganizationMember[]
+  events  Event[]
+
+  @@map("organization")
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String       @default("member") // owner, admin, member
+  createdAt      DateTime     @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@map("organization_member")
+}
+
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String?  // "landing", "twitter", "producthunt"
+  referrer  String?
+  status    String   @default("waiting") // waiting, invited, converted
+  invitedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@map("waitlist_entry")
+}
+
+model InviteToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([email])
+  @@map("invite_token")
+}

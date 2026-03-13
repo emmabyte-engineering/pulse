@@ -3,6 +3,7 @@ import { redirect } from '@sveltejs/kit';
 import { getIntegrationType, getIntegrationBySlug, disconnectIntegration } from '$server/integrations';
 import { getEventTimeSeries, getServiceStats, getSeverityDistribution } from '$server/stats';
 import { db } from '$server/db';
+import { fromJsonField, containsInsensitive } from '$server/db-compat';
 import { fail } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params, url }) => {
@@ -36,8 +37,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	};
 	if (q) {
 		where.OR = [
-			{ summary: { contains: q, mode: 'insensitive' } },
-			{ eventType: { contains: q, mode: 'insensitive' } }
+			{ summary: containsInsensitive(q) },
+			{ eventType: containsInsensitive(q) }
 		];
 	}
 	if (severity) {
@@ -55,7 +56,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 
 	// Extract metadata fields into flat objects for table display
 	const flatEvents = events.map((e) => {
-		const meta = (e.metadata ?? {}) as Record<string, unknown>;
+		const meta = (fromJsonField(e.metadata) ?? {}) as Record<string, unknown>;
 		return {
 			id: e.id,
 			eventType: e.eventType,

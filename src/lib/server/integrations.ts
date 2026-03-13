@@ -1,6 +1,6 @@
 import { db } from './db';
 import { encrypt, decrypt } from './settings';
-import type { EventSource } from '$lib/generated/prisma/client';
+import type { EventSource } from './db-types';
 
 // ─── Integration Type Definitions ────────────────────────────────────────────
 
@@ -160,7 +160,7 @@ export interface IntegrationConfig {
 export async function listIntegrations() {
 	const integrations = await db.integration.findMany({ orderBy: { connectedAt: 'asc' } });
 	return integrations.map((i) => {
-		const typeDef = getIntegrationTypeBySource(i.source);
+		const typeDef = getIntegrationTypeBySource(i.source as EventSource);
 		return {
 			id: i.id,
 			source: i.source,
@@ -217,5 +217,5 @@ export async function getConnectedSources(): Promise<EventSource[]> {
 		where: { enabled: true },
 		select: { source: true }
 	});
-	return integrations.map((i) => i.source);
+	return integrations.map((i) => i.source as EventSource);
 }

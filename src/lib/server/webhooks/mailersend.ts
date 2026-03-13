@@ -1,5 +1,6 @@
 import { db } from '$server/db';
-import type { EventSource, Severity } from '../../generated/prisma/client';
+import { toJsonField } from '$server/db-compat';
+import type { EventSource, Severity } from '../db-types';
 import crypto from 'node:crypto';
 
 const EVENT_TYPE_MAP: Record<string, { eventType: string; severity: Severity }> = {
@@ -50,7 +51,7 @@ export async function processMailerSendWebhook(body: Record<string, unknown>) {
 			emailAddress: recipient,
 			externalId: messageId,
 			summary: buildSummary(mapping.eventType, recipient, subject),
-			metadata: body as object,
+			metadata: toJsonField(body) as string,
 			retainUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year
 		}
 	});
