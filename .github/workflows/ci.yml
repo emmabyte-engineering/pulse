@@ -127,7 +127,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/emmabyte/pulse
+            ghcr.io/emmabyte-engineering/pulse
             emmabyteeng/pulse
           tags: |
             type=sha
@@ -176,7 +176,7 @@ jobs:
             echo "## Docker"
             echo ""
             echo '```bash'
-            echo "docker pull ghcr.io/emmabyte/pulse:${GITHUB_REF_NAME#v}"
+            echo "docker pull ghcr.io/emmabyte-engineering/pulse:${GITHUB_REF_NAME#v}"
             echo "# or"
             echo "docker pull emmabyteeng/pulse:${GITHUB_REF_NAME#v}"
             echo '```'
