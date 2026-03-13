@@ -25,11 +25,13 @@ RUN npx svelte-kit sync
 RUN pnpm db:generate
 RUN pnpm build
 
+# Production dependencies only
+RUN pnpm install --frozen-lockfile --prod
+
 # Production stage
 FROM node:22-slim AS production
 
 RUN apt-get update && apt-get install -y openssl wget netcat-openbsd && rm -rf /var/lib/apt/lists/*
-RUN corepack enable && corepack prepare pnpm@latest --activate
 
 RUN groupadd --gid 1001 pulse && useradd --uid 1001 --gid pulse --shell /bin/sh --create-home pulse
 
