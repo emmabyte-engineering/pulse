@@ -1,5 +1,7 @@
 # Pulse
 
+[![CI](https://github.com/emmabyte-engineering/pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/emmabyte-engineering/pulse/actions/workflows/ci.yml)
+
 Open source observability platform for aggregating logs, events, and metrics from your entire stack.
 
 Pulse collects events from MailerSend, Vercel, PlanetScale, and your application code into a single dashboard with search, filtering, and alerting.
