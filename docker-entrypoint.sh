@@ -13,13 +13,7 @@ echo "PostgreSQL is up!"
 
 # Run database migrations
 echo "Running database migrations..."
-npx prisma migrate deploy
-
-# Seed database if SEED_DB is set
-if [ "$SEED_DB" = "true" ]; then
-  echo "Seeding database..."
-  npx tsx prisma/seed.ts
-fi
+node_modules/.bin/prisma migrate deploy
 
 # Start the application
 echo "Starting application..."
