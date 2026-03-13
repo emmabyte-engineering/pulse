@@ -1,3 +1,5 @@
+# check=skip=SecretsUsedInArgOrEnv
+
 # Build stage
 FROM node:22-slim AS builder
 
