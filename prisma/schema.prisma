@@ -143,8 +143,10 @@ model Metric {
 model ApiKey {
   id          String    @id @default(cuid())
   name        String
+  keyId       String?   @unique
   keyHash     String    @unique
-  prefix      String    // First 8 chars for display (e.g., "pk_a1b2...")
+  prefix      String    // Display prefix (e.g., "pk_a1b2c3d4e5f6...")
+  permissions String[]  @default(["ingest"])
   lastUsedAt  DateTime?
   expiresAt   DateTime?
   createdAt   DateTime  @default(now())

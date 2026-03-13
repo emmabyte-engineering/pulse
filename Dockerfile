@@ -31,16 +31,18 @@ FROM node:22-slim AS production
 RUN apt-get update && apt-get install -y openssl wget netcat-openbsd && rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
+RUN groupadd --gid 1001 pulse && useradd --uid 1001 --gid pulse --shell /bin/sh --create-home pulse
+
 WORKDIR /app
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/src/lib/generated ./src/lib/generated
+COPY --from=builder --chown=pulse:pulse /app/node_modules ./node_modules
+COPY --from=builder --chown=pulse:pulse /app/build ./build
+COPY --from=builder --chown=pulse:pulse /app/prisma ./prisma
+COPY --from=builder --chown=pulse:pulse /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder --chown=pulse:pulse /app/package.json ./package.json
+COPY --from=builder --chown=pulse:pulse /app/src/lib/generated ./src/lib/generated
 
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY --chown=pulse:pulse docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
 ENV NODE_ENV=production
@@ -49,6 +51,8 @@ ENV DB_HOST=db
 ENV DB_PORT=5432
 
 EXPOSE 3000
+
+USER pulse
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1

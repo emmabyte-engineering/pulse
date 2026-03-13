@@ -16,7 +16,29 @@ export const actions: Actions = {
 			return fail(400, { error: 'Name is required' });
 		}
 
-		const result = await createApiKey(name.trim(), locals.user!.id);
+		// Parse expiration
+		const expiration = form.get('expiration') as string;
+		let expiresAt: Date | null = null;
+		if (expiration && expiration !== 'never') {
+			const days: Record<string, number> = { '30d': 30, '90d': 90, '1y': 365 };
+			const d = days[expiration];
+			if (d) {
+				expiresAt = new Date(Date.now() + d * 24 * 60 * 60 * 1000);
+			}
+		}
+
+		// Parse permissions
+		const permissions = form.getAll('permissions') as string[];
+		if (permissions.length === 0) {
+			permissions.push('ingest');
+		}
+
+		const result = await createApiKey({
+			name: name.trim(),
+			createdById: locals.user!.id,
+			permissions,
+			expiresAt
+		});
 
 		return { newKey: result.key, keyName: result.name };
 	},

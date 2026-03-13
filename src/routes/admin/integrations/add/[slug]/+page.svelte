@@ -2,7 +2,7 @@
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
-	import { Triangle, Mail, Database, Globe, Copy, Check, ArrowLeft } from 'lucide-svelte';
+	import { Triangle, Mail, Database, Globe, Copy, Check, ArrowLeft, Key, ExternalLink, BookOpen } from 'lucide-svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let copied = $state(false);
@@ -16,9 +16,12 @@
 
 	const Icon = $derived(icons[data.integration.icon] ?? Globe);
 
+	const endpointUrl = $derived(() => {
+		return `${page.url.origin}${data.integration.webhookEndpoint}`;
+	});
+
 	function copyEndpoint() {
-		const origin = page.url.origin;
-		navigator.clipboard.writeText(`${origin}${data.integration.webhookEndpoint}`);
+		navigator.clipboard.writeText(endpointUrl());
 		copied = true;
 		setTimeout(() => (copied = false), 2000);
 	}
@@ -60,13 +63,55 @@
 		</ol>
 	</div>
 
+	<!-- API Key callout (for ingest-based integrations) -->
+	{#if data.integration.requiresApiKey}
+		<div class="rounded-2xl border border-[#FFBA71]/30 bg-[#FFBA71]/5 p-6">
+			<div class="flex items-start gap-3">
+				<Key class="mt-0.5 h-5 w-5 shrink-0 text-[#FFBA71]" />
+				<div>
+					<h2 class="text-sm font-semibold">API key required</h2>
+					<p class="mt-1 text-sm text-muted-foreground">
+						This integration sends events via the ingest API, which requires an API key for authentication. Create one before you start sending events.
+					</p>
+					<a
+						href="/admin/api-keys"
+						class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#FFBA71] to-[#FF6798] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+					>
+						<Key class="h-3.5 w-3.5" />
+						Go to API Keys
+					</a>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Documentation link -->
+	<div class="rounded-2xl border border-border bg-card p-6">
+		<div class="flex items-start gap-3">
+			<BookOpen class="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+			<div>
+				<h2 class="text-sm font-semibold">Documentation</h2>
+				<p class="mt-1 text-sm text-muted-foreground">
+					Learn how to configure {data.integration.name}, define custom event types, and get the most out of this integration.
+				</p>
+				<a
+					href={data.integration.docsUrl}
+					class="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[#b93a54] transition-colors hover:text-[#e85d75]"
+				>
+					Read the {data.integration.name} integration guide
+					<ExternalLink class="h-3.5 w-3.5" />
+				</a>
+			</div>
+		</div>
+	</div>
+
 	<!-- Endpoint URL -->
 	<div class="rounded-2xl border border-border bg-card p-6">
 		<h2 class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Endpoint URL</h2>
 		<p class="mt-2 text-xs text-muted-foreground">Configure this URL in your external service</p>
 		<div class="mt-3 flex items-center gap-2">
 			<code class="flex-1 rounded-lg bg-muted px-3 py-2 font-mono text-xs">
-				{page.url.origin}{data.integration.webhookEndpoint}
+				{endpointUrl()}
 			</code>
 			<button
 				onclick={copyEndpoint}

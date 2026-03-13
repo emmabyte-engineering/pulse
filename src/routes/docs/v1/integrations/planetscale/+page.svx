@@ -1,0 +1,95 @@
+---
+title: PlanetScale Integration
+---
+
+# PlanetScale Integration
+
+Track database queries, slow queries, errors, and performance metrics from PlanetScale.
+
+## How It Works
+
+PlanetScale events are sent to Pulse via the ingest API using an API key. You instrument your database layer to report events to Pulse.
+
+## Setup
+
+1. Create an API key from the [API Keys](/admin/api-keys) page.
+2. Store the key in your application's environment variables.
+3. Send database events to your org-scoped endpoint.
+
+## Endpoint
+
+```
+POST https://pulse.emmabyte.io/api/v1/{org-slug}/ingest
+```
+
+## Recommended Event Types
+
+Use `db.` prefix for database events:
+
+| Event Type       | Severity | Description                         |
+| ---------------- | -------- | ----------------------------------- |
+| `db.query`       | DEBUG    | Standard query executed             |
+| `db.slow_query`  | WARN     | Query exceeded duration threshold   |
+| `db.error`       | ERROR    | Query failed                        |
+| `db.connection`  | INFO     | Connection pool event               |
+| `db.migration`   | INFO     | Schema migration applied            |
+
+## Example: Prisma Middleware
+
+Instrument your Prisma client to report slow queries:
+
+```typescript
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+const SLOW_QUERY_MS = 500;
+
+prisma.$use(async (params, next) => {
+  const start = Date.now();
+  const result = await next(params);
+  const duration = Date.now() - start;
+
+  if (duration > SLOW_QUERY_MS) {
+    await fetch(PULSE_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${PULSE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        source: 'PLANETSCALE',
+        eventType: 'db.slow_query',
+        severity: 'WARN',
+        summary: `${params.model}.${params.action} took ${duration}ms`,
+        metadata: {
+          model: params.model,
+          action: params.action,
+          duration,
+          args: params.args
+        }
+      })
+    });
+  }
+
+  return result;
+});
+```
+
+## Metadata
+
+Include query context for useful dashboard filtering:
+
+```json
+{
+  "source": "PLANETSCALE",
+  "eventType": "db.error",
+  "severity": "ERROR",
+  "summary": "Failed to insert user record",
+  "metadata": {
+    "model": "User",
+    "action": "create",
+    "error": "Unique constraint violation on email",
+    "duration": 12
+  }
+}
+```

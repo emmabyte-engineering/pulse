@@ -22,6 +22,8 @@ export interface IntegrationTypeDefinition {
 	fields: SetupField[];
 	setupSteps: string[];
 	webhookEndpoint: string;
+	docsUrl: string;
+	requiresApiKey: boolean;
 	columns: { key: string; label: string; extractFrom?: string }[];
 }
 
@@ -47,6 +49,8 @@ export const INTEGRATION_TYPES: IntegrationTypeDefinition[] = [
 			'Copy the verification secret and paste it here'
 		],
 		webhookEndpoint: '/api/webhooks/vercel',
+		docsUrl: '/docs/v1/integrations/vercel',
+		requiresApiKey: false,
 		columns: [
 			{ key: 'eventType', label: 'Type' },
 			{ key: 'severity', label: 'Severity' },
@@ -77,6 +81,8 @@ export const INTEGRATION_TYPES: IntegrationTypeDefinition[] = [
 			'Copy the signing secret and paste it here'
 		],
 		webhookEndpoint: '/api/webhooks/mailersend',
+		docsUrl: '/docs/v1/integrations/mailersend',
+		requiresApiKey: false,
 		columns: [
 			{ key: 'eventType', label: 'Type' },
 			{ key: 'severity', label: 'Severity' },
@@ -93,11 +99,15 @@ export const INTEGRATION_TYPES: IntegrationTypeDefinition[] = [
 		icon: 'database',
 		fields: [],
 		setupSteps: [
-			'PlanetScale events are ingested via the API endpoint',
-			'Create an API key on the API Keys page',
-			'Send events using POST requests with your API key'
+			'Create an API key from the API Keys page in the sidebar',
+			'Copy the key immediately — it is only shown once',
+			'Send events to the endpoint below using Authorization: Bearer <your-key>',
+			'Use dot-notation event types like db.query, db.error, db.slow_query',
+			'See the docs for the full event schema and examples'
 		],
 		webhookEndpoint: '/api/ingest',
+		docsUrl: '/docs/v1/integrations/planetscale',
+		requiresApiKey: true,
 		columns: [
 			{ key: 'eventType', label: 'Type' },
 			{ key: 'severity', label: 'Severity' },
@@ -113,11 +123,16 @@ export const INTEGRATION_TYPES: IntegrationTypeDefinition[] = [
 		icon: 'globe',
 		fields: [],
 		setupSteps: [
-			'Application events are sent via the ingest API',
-			'Create an API key on the API Keys page',
-			'Instrument your app to send events with your API key'
+			'Create an API key from the API Keys page in the sidebar',
+			'Copy the key immediately — it is only shown once',
+			'Send events to the endpoint below using Authorization: Bearer <your-key>',
+			'Define your own event types using dot-notation (e.g., email.sent, auth.login, order.created)',
+			'Include optional context like userId, emailAddress, and metadata for richer event data',
+			'See the docs for the full event schema, naming conventions, and integration examples'
 		],
 		webhookEndpoint: '/api/ingest',
+		docsUrl: '/docs/v1/integrations/website',
+		requiresApiKey: true,
 		columns: [
 			{ key: 'eventType', label: 'Type' },
 			{ key: 'severity', label: 'Severity' },

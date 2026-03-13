@@ -343,6 +343,70 @@
 		</div>
 	</section>
 
+	<!-- Engineering Services -->
+	<section class="border-t border-border bg-muted/50 py-24">
+		<div class="mx-auto max-w-6xl px-6">
+			<div class="text-center">
+				<p class="text-sm font-semibold uppercase tracking-wider text-[#b93a54]">
+					Services
+				</p>
+				<h2 class="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+					Need help building your stack?
+				</h2>
+				<p class="mx-auto mt-4 max-w-2xl text-muted-foreground">
+					Pulse is built by Emmabyte Engineering — a software consultancy that ships
+					production-grade web applications, APIs, and infrastructure.
+				</p>
+			</div>
+			<div class="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3">
+				<div class="rounded-xl border border-border bg-card p-6 text-center">
+					<div
+						class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[#e85d75]/8"
+					>
+						<Code2 class="h-5 w-5 text-[#b93a54]" />
+					</div>
+					<h3 class="text-sm font-semibold text-foreground">Full-Stack Development</h3>
+					<p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+						SvelteKit, React, Node.js, and more — from prototype to production.
+					</p>
+				</div>
+				<div class="rounded-xl border border-border bg-card p-6 text-center">
+					<div
+						class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[#e85d75]/8"
+					>
+						<Plug class="h-5 w-5 text-[#b93a54]" />
+					</div>
+					<h3 class="text-sm font-semibold text-foreground">API & Integrations</h3>
+					<p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+						Custom APIs, webhook pipelines, and third-party integrations.
+					</p>
+				</div>
+				<div class="rounded-xl border border-border bg-card p-6 text-center">
+					<div
+						class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[#e85d75]/8"
+					>
+						<Shield class="h-5 w-5 text-[#b93a54]" />
+					</div>
+					<h3 class="text-sm font-semibold text-foreground">DevOps & Infrastructure</h3>
+					<p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+						Docker, CI/CD, cloud deployment, and observability setup.
+					</p>
+				</div>
+			</div>
+			<div class="mt-10 text-center">
+				<a
+					href="https://emmabyte.io"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="group inline-flex items-center gap-2 text-sm font-medium text-[#b93a54] transition-colors hover:text-[#e85d75]"
+				>
+					Learn more at emmabyte.io
+					<ArrowRight class="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+				</a>
+			</div>
+		</div>
+	</section>
+
 	<!-- CTA Banner -->
 	<section class="px-6 py-24">
 		<div class="mx-auto max-w-5xl">
@@ -401,7 +465,7 @@
 			class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-6 sm:flex-row"
 		>
 			<div class="flex items-center gap-4 text-sm text-muted-foreground">
-				<span>&copy; {new Date().getFullYear()} Pulse</span>
+				<span>&copy; {new Date().getFullYear()} Emmabyte Engineering, Inc.</span>
 				<span class="text-border">|</span>
 				<span>
 					A product of

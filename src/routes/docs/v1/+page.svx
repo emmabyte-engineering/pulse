@@ -1,0 +1,38 @@
+---
+title: Introduction
+---
+
+# Pulse Documentation
+
+Pulse is an observability platform that aggregates logs, events, and metrics from your entire stack into a single dashboard.
+
+## Quick Start
+
+1. **Create an API key** from the [API Keys](/admin/api-keys) page in the admin dashboard.
+2. **Send events** to your org-scoped ingest endpoint using the API key.
+3. **View events** in the dashboard, set up alerts, and connect integrations.
+
+## Architecture
+
+Pulse receives events through two mechanisms:
+
+- **Webhooks** — Direct integrations with services like Vercel and MailerSend that push events automatically.
+- **Ingest API** — A REST endpoint for your application code and custom integrations to send events programmatically.
+
+All events are stored in PostgreSQL with full-text search, filtered by source, severity, and time range.
+
+## API Versioning
+
+The Pulse API is versioned via URL path. The current version is **v1**:
+
+```
+https://pulse.emmabyte.io/api/v1/{org-slug}/ingest
+```
+
+When breaking changes are introduced, a new version will be published. Previous versions will remain available with a deprecation timeline.
+
+## Next Steps
+
+- [API Reference](/docs/v1/api) — Authentication, endpoints, and payload schemas.
+- [Website Integration](/docs/v1/integrations/website) — Send events from your SvelteKit app.
+- [API Keys](/docs/v1/api/keys) — Key formats, permissions, and management.

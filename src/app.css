@@ -58,6 +58,26 @@
 	}
 }
 
+/* Docs prose styling */
+.docs-prose {
+	@apply prose prose-slate dark:prose-invert max-w-none;
+}
+.docs-prose code:not(pre code) {
+	@apply rounded bg-muted px-1.5 py-0.5 text-sm font-medium text-foreground before:content-none after:content-none;
+}
+.docs-prose pre {
+	@apply rounded-lg border border-border bg-[hsl(220_20%_14%)] text-sm;
+}
+.docs-prose a {
+	@apply text-[#b93a54] no-underline hover:underline;
+}
+.docs-prose th {
+	@apply text-left;
+}
+.docs-prose table {
+	@apply text-sm;
+}
+
 /* Accessibility preferences */
 
 /* Reduced motion — disable all animations and transitions */
