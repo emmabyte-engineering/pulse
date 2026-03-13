@@ -106,7 +106,7 @@ jobs:
           - db: sqlite
             build-arg: DATABASE_URL=file:./data/pulse.db
           - db: postgresql
-            build-arg: ""
+            build-arg: DATABASE_URL=postgresql://build:build@localhost:5432/build
     steps:
       - uses: actions/checkout@v4
 

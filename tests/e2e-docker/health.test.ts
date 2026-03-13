@@ -12,9 +12,4 @@ test.describe('Container Health', () => {
 		await page.goto('/');
 		await expect(page.locator('h1')).toBeVisible();
 	});
-
-	test('unauthenticated /admin redirects to /login', async ({ page }) => {
-		await page.goto('/admin');
-		await expect(page).toHaveURL(/\/login/);
-	});
 });

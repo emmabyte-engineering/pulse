@@ -14,7 +14,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Prisma 7 config requires DATABASE_URL; better-auth requires its secret at build time
-ARG DATABASE_URL=postgresql://build:build@localhost:5432/build
+ARG DATABASE_URL=file:./data/pulse.db
 ARG BETTER_AUTH_SECRET=build-time-placeholder
 ARG BETTER_AUTH_URL=http://localhost:3000
 ENV DATABASE_URL=$DATABASE_URL

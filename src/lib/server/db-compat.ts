@@ -1,6 +1,6 @@
 import { isPostgres } from './db-provider';
 
-/** Case-insensitive contains filter. PostgreSQL needs explicit mode; SQLite is case-insensitive by default. */
+/** Case-insensitive contains filter. PostgreSQL needs explicit mode; SQLite LIKE is case-insensitive for ASCII. */
 export function containsInsensitive(value: string): { contains: string; mode?: 'insensitive' } {
 	if (isPostgres()) return { contains: value, mode: 'insensitive' };
 	return { contains: value };

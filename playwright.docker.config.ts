@@ -4,7 +4,7 @@ export default defineConfig({
 	testDir: './tests/e2e-docker',
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
-	retries: 2,
+	retries: process.env.CI ? 2 : 0,
 	workers: 1,
 	reporter: 'html',
 	timeout: 60_000,
