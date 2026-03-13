@@ -82,7 +82,7 @@ test.describe('Dashboard accessibility', () => {
 
 		await expect(page.getByRole('link', { name: /dashboard/i })).toBeVisible();
 		await expect(page.getByRole('link', { name: /settings/i })).toBeVisible();
-		await expect(page.getByRole('link', { name: /api keys/i })).toBeVisible();
+		await expect(page.getByRole('link', { name: 'API Keys', exact: true })).toBeVisible();
 	});
 
 	test('sign out redirects to login', async ({ page, request }) => {
