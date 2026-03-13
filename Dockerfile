@@ -27,7 +27,6 @@ RUN pnpm build
 
 # Production dependencies only — then prune packages not needed at runtime
 RUN pnpm install --frozen-lockfile --prod \
-    && rm -rf node_modules/.pnpm/@prisma+dev@* \
     && rm -rf node_modules/.pnpm/hono@* \
     && rm -rf node_modules/.pnpm/@hono+node-server@* \
     && rm -rf node_modules/.pnpm/glob@10.* \

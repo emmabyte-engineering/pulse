@@ -14,8 +14,12 @@ async function createClient(): Promise<PrismaClient> {
 		const adapter = new PrismaPg(pool);
 		return new PrismaClient({ adapter });
 	}
+	const { PrismaBetterSqlite3 } = await import('@prisma/adapter-better-sqlite3');
+	const { env } = await import('$env/dynamic/private');
+	const url = env.DATABASE_URL ?? 'file:/app/data/pulse.db';
+	const adapter = new PrismaBetterSqlite3({ url });
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	return new PrismaClient({} as any);
+	return new PrismaClient({ adapter } as any);
 }
 
 export const db = globalForPrisma.prisma ?? (await createClient());
