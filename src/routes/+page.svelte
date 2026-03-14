@@ -14,6 +14,7 @@
 		ArrowRight
 	} from 'lucide-svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import ProfileDropdown from '$lib/components/ProfileDropdown.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -107,9 +108,13 @@
 			</div>
 			<div class="flex items-center gap-4">
 				<ThemeToggle />
-				<a href="/login" class="text-sm text-muted-foreground transition-colors hover:text-foreground">
-					Log in
-				</a>
+				{#if data.user}
+					<ProfileDropdown user={data.user} />
+				{:else}
+					<a href="/login" class="text-sm text-muted-foreground transition-colors hover:text-foreground">
+						Log in
+					</a>
+				{/if}
 			</div>
 		</div>
 	</nav>
@@ -480,7 +485,11 @@
 				</span>
 			</div>
 			<div class="flex items-center gap-6 text-sm text-muted-foreground">
-				<a href="/login" class="transition-colors hover:text-muted-foreground">Sign in</a>
+				{#if data.user}
+					<a href="/admin/profile" class="transition-colors hover:text-foreground">My Account</a>
+				{:else}
+					<a href="/login" class="transition-colors hover:text-foreground">Sign in</a>
+				{/if}
 			</div>
 		</div>
 	</footer>

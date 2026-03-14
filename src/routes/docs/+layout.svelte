@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import ThemeToggle from '$components/ThemeToggle.svelte';
+	import ProfileDropdown from '$components/ProfileDropdown.svelte';
 	import type { Snippet } from 'svelte';
 	import { BookOpen, Zap, Globe, Mail, Database, Triangle, Key, ChevronRight } from 'lucide-svelte';
 
-	let { children }: { children: Snippet } = $props();
+	let { data, children }: { data: { user?: { name: string; email: string; image?: string | null; role?: string } | null }; children: Snippet } = $props();
 	let mobileNavOpen = $state(false);
 
 	const navSections = [
@@ -59,12 +60,16 @@
 				>
 					GitHub
 				</a>
-				<a
-					href="/login"
-					class="text-sm text-muted-foreground transition-colors hover:text-foreground"
-				>
-					Sign in
-				</a>
+				{#if data.user}
+					<ProfileDropdown user={data.user} />
+				{:else}
+					<a
+						href="/login"
+						class="text-sm text-muted-foreground transition-colors hover:text-foreground"
+					>
+						Sign in
+					</a>
+				{/if}
 				<ThemeToggle />
 				<button
 					aria-label="Toggle navigation"
