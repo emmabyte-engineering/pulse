@@ -24,11 +24,15 @@ export async function createAndSendInvite(email: string): Promise<{ success: boo
 		data: { email, token, expiresAt }
 	});
 
-	// Update waitlist entry status
-	await db.waitlistEntry.updateMany({
-		where: { email },
-		data: { status: 'invited', invitedAt: new Date() }
-	});
+	// Update waitlist entry status if one exists (cloud feature)
+	try {
+		await db.waitlistEntry.updateMany({
+			where: { email },
+			data: { status: 'invited', invitedAt: new Date() }
+		});
+	} catch {
+		// WaitlistEntry may not exist in single-tenant setups — ignore
+	}
 
 	const signupUrl = `${getBaseUrl()}/signup/${token}`;
 
@@ -88,13 +92,17 @@ export async function markInviteUsed(tokenId: string): Promise<void> {
 		data: { usedAt: new Date() }
 	});
 
-	// Also get the email to update waitlist status
+	// Update waitlist status if entry exists (cloud feature)
 	const invite = await db.inviteToken.findUnique({ where: { id: tokenId } });
 	if (invite) {
-		await db.waitlistEntry.updateMany({
-			where: { email: invite.email },
-			data: { status: 'converted' }
-		});
+		try {
+			await db.waitlistEntry.updateMany({
+				where: { email: invite.email },
+				data: { status: 'converted' }
+			});
+		} catch {
+			// WaitlistEntry may not exist in single-tenant setups — ignore
+		}
 	}
 }
 
