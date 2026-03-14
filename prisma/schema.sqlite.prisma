@@ -23,7 +23,6 @@ model User {
   accounts      Account[]
   apiKeys       ApiKey[]
   organizations OrganizationMember[]
-  sentInvites   OrganizationInvite[]
 
   @@map("user")
 }
@@ -195,18 +194,15 @@ model NotificationChannel {
 }
 
 model Organization {
-  id               String   @id @default(cuid())
-  name             String
-  slug             String   @unique
-  plan             String   @default("free") // free, pro, enterprise
-  stripeCustomerId String?  @unique
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  plan      String   @default("free") // free, pro, enterprise
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  members      OrganizationMember[]
-  events       Event[]
-  subscription Subscription?
-  invites      OrganizationInvite[]
+  members OrganizationMember[]
+  events  Event[]
 
   @@map("organization")
 }
@@ -250,37 +246,3 @@ model InviteToken {
   @@map("invite_token")
 }
 
-model Subscription {
-  id                   String    @id @default(cuid())
-  organizationId       String    @unique
-  stripeSubscriptionId String?
-  plan                 String    @default("free") // free, pro, enterprise
-  status               String    @default("active") // active, past_due, canceled, trialing
-  currentPeriodStart   DateTime?
-  currentPeriodEnd     DateTime?
-  cancelAtPeriodEnd    Boolean   @default(false)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@map("subscription")
-}
-
-model OrganizationInvite {
-  id             String    @id @default(cuid())
-  organizationId String
-  email          String
-  role           String    @default("member") // owner, admin, member
-  token          String    @unique
-  expiresAt      DateTime
-  invitedById    String
-  acceptedAt     DateTime?
-  createdAt      DateTime  @default(now())
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  invitedBy    User         @relation(fields: [invitedById], references: [id], onDelete: Cascade)
-
-  @@unique([organizationId, email])
-  @@map("organization_invite")
-}
