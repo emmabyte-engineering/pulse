@@ -10,21 +10,27 @@
 		Key,
 		Settings,
 		Users,
+		UserPlus,
 		Triangle,
 		Mail,
 		Database,
 		Globe,
 		Plus,
-		BookOpen
+		BookOpen,
+		UserCircle
 	} from 'lucide-svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 	const overviewItems = [
 		{ href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-		{ href: '/admin/waitlist', label: 'Waitlist', icon: Users },
+		{ href: '/admin/users', label: 'Users', icon: Users },
 		{ href: '/admin/api-keys', label: 'API Keys', icon: Key },
 		{ href: '/admin/settings', label: 'Settings', icon: Settings }
+	];
+
+	const accountItems = [
+		{ href: '/admin/profile', label: 'Profile', icon: UserCircle }
 	];
 
 	const serviceIcons: Record<string, typeof Triangle> = {
@@ -66,6 +72,28 @@
 				</p>
 				<div class="space-y-1">
 					{#each overviewItems as item}
+						{@const Icon = item.icon}
+						<a
+							href={item.href}
+							class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
+								{isActive(item.href)
+								? 'bg-accent text-accent-foreground'
+								: 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'}"
+						>
+							<Icon class="h-4 w-4" />
+							{item.label}
+						</a>
+					{/each}
+				</div>
+			</div>
+
+			<!-- Account -->
+			<div>
+				<p class="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+					Account
+				</p>
+				<div class="space-y-1">
+					{#each accountItems as item}
 						{@const Icon = item.icon}
 						<a
 							href={item.href}
